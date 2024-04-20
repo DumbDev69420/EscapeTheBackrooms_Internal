@@ -2636,26 +2636,26 @@ namespace Cheat {
 						if (Settings::Godmode) {
 							auto Name = CurrentEnemy->Class->Name;
 							if (StaticSkinMf && Name == StaticSkinMf->Name) {
-								auto SkinNigga = (SDK::ABP_SkinStealer_C*)CurrentEnemy;
+								auto SkinSteala = (SDK::ABP_SkinStealer_C*)CurrentEnemy;
 
 								if (Settings::Godmode)
-									SkinNigga->CanAttack = false;
+									SkinSteala->CanAttack = false;
 
 							}
 							else
 								if (StaticBacteriaMf && Name == StaticBacteriaMf->Name) {
-									auto BacteriaNigga = (SDK::ABacteria_BP_C*)CurrentEnemy;
+									auto Bacteriadude = (SDK::ABacteria_BP_C*)CurrentEnemy;
 
 									if (Settings::Godmode)
-										BacteriaNigga->CanAttack = false;
+										Bacteriadude->CanAttack = false;
 								}
 								else
 									if (StaticHowlerMf && Name == StaticHowlerMf->Name) {
-										auto HowlerNigga = (SDK::AHowler_BP_C*)CurrentEnemy;
+										auto Howlerdude = (SDK::AHowler_BP_C*)CurrentEnemy;
 
 
 										//if (Settings::Godmode)
-										//	HowlerNigga->CanAttack = false;
+										//	Howlerdude->CanAttack = false;
 									}
 						}
 
