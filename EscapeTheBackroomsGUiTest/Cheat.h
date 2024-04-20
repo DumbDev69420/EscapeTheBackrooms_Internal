@@ -1996,7 +1996,7 @@ namespace Cheat {
 					
 
 
-					//if (GetAsyncKeyState(VK_F3) & 1 && BPCharacter->CurrentItem_Rep) { // If i found out how to use this, maybe i can change the color of stuff (Exploit 4 maybe, severe)
+					//if (GetAsyncKeyState(VK_F3) & 1 && BPCharacter->CurrentItem_Rep) { // actual safe item
 
 					//	auto rope = (SDK::ABP_Scanner_C*)SDK::ABP_Scanner_C::GetDefaultObj();
 					//	if (BPCharacter->CurrentItem_Rep->ID == rope->ID) {
