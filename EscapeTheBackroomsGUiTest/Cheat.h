@@ -170,7 +170,7 @@ namespace Cheat {
 
 		CWINGui::Font = SDK::UObject::FindObject<SDK::UFont>("Font Roboto.Roboto");
 
-		StaticConstructObject_Internal = (fStaticConstructObject_Internal)((uintptr_t)GetModuleHandle(0) + 0x1359C70);
+		StaticConstructObject_Internal = (fStaticConstructObject_Internal)((uintptr_t)GetModuleHandle(0) + Offsets::StaticConstructObject_Internal);
 
 		Initialized = true;
 

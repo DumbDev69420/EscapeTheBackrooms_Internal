@@ -30,6 +30,8 @@ namespace Offsets
 	constexpr int32 GNames            = 0x00000000;
 	constexpr int32 ProcessEvent      = 0x013522E0;
 	constexpr int32 ProcessEventIdx   = 0x00000044;
+	constexpr int32 PostRenderIdx     = 0x00000064;
+	constexpr int32 StaticConstructObject_Internal = 0x1359C70;
 }
 
 #include "PropertyFixup.hpp"

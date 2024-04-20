@@ -899,7 +899,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 			auto ViewportClient = LocalPlayer->ViewportClient;
 			auto vTable = *(void***)(ViewportClient);
 			auto vTableWorld = *(void***)(World);
-			Functions::ChangePointer((uintptr_t)vTable, 100, (uintptr_t)origin_renderer);
+			Functions::ChangePointer((uintptr_t)vTable, Offsets::PostRenderIdx, (uintptr_t)origin_renderer);
 
 			MH_DisableHook(MH_ALL_HOOKS);
 
@@ -938,7 +938,7 @@ void MainThread() {
 	auto vTable = *(void***)(ViewportClient);
 	auto vTableWorld = *(void***)(World);
 
-	origin_renderer = (PostRender_t)Functions::ChangePointer((uintptr_t)vTable, 100, (uintptr_t)MainRender);
+	origin_renderer = (PostRender_t)Functions::ChangePointer((uintptr_t)vTable, Offsets::PostRenderIdx, (uintptr_t)MainRender);
 	//fnProcessEventOrigin = (fnProcessEvent)Functions::ChangePointer((uintptr_t)vTableWorld, Offsets::ProcessEventIdx, (uintptr_t)ProcessEventHook);
 
 	MH_Initialize();
