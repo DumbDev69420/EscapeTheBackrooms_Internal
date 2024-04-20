@@ -1329,7 +1329,6 @@ namespace Cheat {
 			RunMainHost();
 
 
-			static bool WasCollide = false;
 			static SDK::ABoatPawn* LastBoat = 0x0;
 
 			if (Settings::BoatFly || Settings::BoatSpeedhack || Settings::BoatEsp) {
@@ -1360,15 +1359,14 @@ namespace Cheat {
 
 							if (BoatPawn->Controller == PlayerController) {
 
-								LastBoat = BoatPawn;
-
 								//BoatPawn->LaunchPawn(SDK::FVector(0, 0, 200.5f), false, false);
 								if (Settings::BoatFly) {
 
 									BoatPawn->RootComponent->ComponentVelocity = { 0.0f, 0.0f, 0.0f };
 									BoatPawn->SceneComponent->ComponentVelocity = { 0.0f, 0.0f, 0.0f };
 									BoatPawn->bActorEnableCollision = false; 
-									WasCollide = true;
+
+									Settings::IniShitsLevel[5] = true;
 
 									if (GetAsyncKeyState(VK_LEFT)) {
 										SDK::FRotator rotation = BoatPawn->K2_GetActorRotation();
@@ -1512,11 +1510,27 @@ namespace Cheat {
 			}
 			else
 			{
-				if (WasCollide) {
-					if (UsefullFuncs::ShouldUsePtr(LastBoat))
-						LastBoat->SetActorEnableCollision(true);
+				if (Settings::IniShitsLevel[5]) {
 
-					WasCollide = false;
+					if (auto BoatClass = SDK::ABP_RowBoat_C::StaticClass(); BoatClass)
+					{
+
+						SDK::TArray<SDK::AActor*> BoatPawns;
+						GPStatics->GetAllActorsOfClass(WorldP, BoatClass, &BoatPawns);
+
+						if (BoatPawns.IsValid()) {
+							for (size_t i = 0; i < BoatPawns.Num(); i++)
+							{
+								auto BoatPawn = (SDK::ABP_RowBoat_C*)BoatPawns[i];
+
+								if (BoatPawn->Controller == PlayerController) {
+									BoatPawn->bActorEnableCollision = false;
+								}
+							}
+						}
+					}
+
+					Settings::IniShitsLevel[5] = false;
 				}
 			}
 

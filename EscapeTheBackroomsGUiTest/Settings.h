@@ -339,7 +339,7 @@ namespace Settings {
 	bool InfiniteStamina = false;
 	bool AutoRespawnPlayers = true;
 	bool wtf_ = false;
-	bool IniShitsLevel[5];
+	bool IniShitsLevel[6];
 	bool IniShitsPlayer[7];
 
 	bool SpawnItem = false;
