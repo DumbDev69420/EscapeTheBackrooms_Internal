@@ -1,0 +1,37 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.6.33815.320
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "EscapeTheBackroomsGUiTest", "EscapeTheBackroomsGUiTest\EscapeTheBackroomsGUiTest.vcxproj", "{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		d|x64 = d|x64
+		d|x86 = d|x86
+		Debug|x64 = Debug|x64
+		Debug|x86 = Debug|x86
+		Release|x64 = Release|x64
+		Release|x86 = Release|x86
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.d|x64.ActiveCfg = Release|x64
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.d|x64.Build.0 = Release|x64
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.d|x86.ActiveCfg = d|Win32
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.d|x86.Build.0 = d|Win32
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Debug|x64.ActiveCfg = Debug|x64
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Debug|x64.Build.0 = Debug|x64
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Debug|x86.ActiveCfg = Debug|Win32
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Debug|x86.Build.0 = Debug|Win32
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Release|x64.ActiveCfg = Release|x64
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Release|x64.Build.0 = Release|x64
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Release|x86.ActiveCfg = Release|Win32
+		{4DFD61F0-4EAC-4722-849E-01FCC94C71B4}.Release|x86.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C4CF1185-48A2-42A5-91E9-C07CB9FE8655}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,46 @@
+#pragma once
+
+// Dumped with Dumper-7!
+
+
+namespace SDK
+{
+//---------------------------------------------------------------------------------------------------------------------
+// CLASSES
+//---------------------------------------------------------------------------------------------------------------------
+
+// 0x43 (0x293 - 0x250)
+// BlueprintGeneratedClass BP_Pushable.BP_Pushable_C
+class ABP_Pushable_C : public APushableActor
+{
+public:
+	struct FPointerToUberGraphFrame              UberGraphFrame;                                    // 0x250(0x8)(ZeroConstructor, Transient, DuplicateTransient)
+	class UStaticMeshComponent*                  StaticMesh1;                                       // 0x258(0x8)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
+	class UAudioComponent*                       Audio;                                             // 0x260(0x8)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
+	class UStaticMeshComponent*                  StaticMesh3;                                       // 0x268(0x8)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
+	class USceneComponent*                       CablePoint;                                        // 0x270(0x8)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
+	class UStaticMeshComponent*                  StaticMesh2;                                       // 0x278(0x8)(BlueprintVisible, ZeroConstructor, InstancedReference, IsPlainOldData, NonTransactional, NoDestructor, HasGetValueTypeHash)
+	int32                                        Index;                                             // 0x280(0x4)(Edit, BlueprintVisible, Net, ZeroConstructor, IsPlainOldData, RepNotify, NoDestructor, ExposeOnSpawn, HasGetValueTypeHash)
+	uint8                                        Pad_2A1[0x4];                                      // Fixing Size After Last Property  [ Dumper-7 ]
+	class ABPCharacter_Demo_C*                   PushingActor;                                      // 0x288(0x8)(Edit, BlueprintVisible, ZeroConstructor, DisableEditOnTemplate, DisableEditOnInstance, IsPlainOldData, NoDestructor, HasGetValueTypeHash)
+	bool                                         Active;                                            // 0x290(0x1)(Edit, BlueprintVisible, Net, ZeroConstructor, DisableEditOnInstance, IsPlainOldData, RepNotify, NoDestructor)
+	bool                                         CanPush;                                           // 0x291(0x1)(Edit, BlueprintVisible, Net, ZeroConstructor, DisableEditOnInstance, IsPlainOldData, RepNotify, NoDestructor)
+	bool                                         IsPlaced;                                          // 0x292(0x1)(Edit, BlueprintVisible, Net, ZeroConstructor, DisableEditOnInstance, IsPlainOldData, NoDestructor)
+
+	static class UClass* StaticClass();
+	static class ABP_Pushable_C* GetDefaultObj();
+
+	void OnRep_Index(const struct FTransform& CallFunc_MakeTransform_ReturnValue, const struct FTransform& CallFunc_MakeTransform_ReturnValue_1, bool CallFunc_SetStaticMesh_ReturnValue, const struct FTransform& CallFunc_MakeTransform_ReturnValue_2, const struct FHitResult& CallFunc_K2_SetRelativeTransform_SweepHitResult, const struct FHitResult& CallFunc_K2_SetRelativeTransform_SweepHitResult_1, bool CallFunc_SetStaticMesh_ReturnValue_1, const struct FHitResult& CallFunc_K2_SetRelativeTransform_SweepHitResult_2, bool K2Node_SwitchInteger_CmpSuccess, bool CallFunc_SetStaticMesh_ReturnValue_2);
+	TArray<struct FVector> Get_Right_Collision_Points(class ABPCharacter_Demo_C* PushingActor, float Axis, const TArray<struct FVector>& NewLocalVar_0, bool Temp_bool_Variable, bool CallFunc_Greater_FloatFloat_ReturnValue, const struct FVector& CallFunc_GetActorRightVector_ReturnValue, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue, const struct FVector& CallFunc_GetActorForwardVector_ReturnValue, bool Temp_bool_Variable_1, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue_1, const struct FVector& CallFunc_GetActorRightVector_ReturnValue_1, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue_2, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue_3, float CallFunc_DotProduct2D_ReturnValue, float CallFunc_DotProduct2D_ReturnValue_1, bool CallFunc_Less_FloatFloat_ReturnValue, bool CallFunc_Greater_FloatFloat_ReturnValue_1, bool CallFunc_Not_PreBool_ReturnValue, bool CallFunc_Not_PreBool_ReturnValue_1, bool K2Node_Select_Default, bool K2Node_Select_Default_1, TArray<struct FVector>& CallFunc_GetRightBoundingPoints_ReturnValue, TArray<struct FVector>& CallFunc_GetForwardBoundingPoints_ReturnValue, float CallFunc_Abs_ReturnValue, bool CallFunc_Greater_FloatFloat_ReturnValue_2);
+	void Can_Push(class ABPCharacter_Demo_C* Target, float NewParam, bool MoveForward, bool* NewParam2, const struct FVector& PushingVector, const TArray<struct FVector>& L_CollisionPoints, class ABPCharacter_Demo_C* L_PushingActor, float L_Axis, bool CallFunc_EqualEqual_FloatFloat_ReturnValue, bool CallFunc_BooleanAND_ReturnValue, int32 Temp_int_Array_Index_Variable, float CallFunc_SelectFloat_ReturnValue, int32 Temp_int_Loop_Counter_Variable, int32 CallFunc_Add_IntInt_ReturnValue, float CallFunc_SelectFloat_ReturnValue_1, const struct FVector& CallFunc_GetActorRightVector_ReturnValue, TArray<struct FVector>& CallFunc_Get_Right_Collision_Points_ReturnValue, const struct FVector& CallFunc_Array_Get_Item, int32 CallFunc_Array_Length_ReturnValue, bool CallFunc_Less_IntInt_ReturnValue, const struct FVector& CallFunc_Multiply_VectorFloat_ReturnValue, const struct FVector& CallFunc_Multiply_VectorFloat_ReturnValue_1, TArray<class AActor*>& K2Node_MakeArray_Array, const struct FVector& CallFunc_GetActorForwardVector_ReturnValue, const struct FVector& CallFunc_Multiply_VectorFloat_ReturnValue_2, TArray<struct FVector>& CallFunc_Get_Forward_Collision_Points_CollisionPoints, const struct FVector& CallFunc_K2_GetActorLocation_ReturnValue, const struct FVector& CallFunc_Add_VectorVector_ReturnValue, const struct FVector& CallFunc_Add_VectorVector_ReturnValue_1, const struct FVector& CallFunc_Add_VectorVector_ReturnValue_2, const struct FHitResult& CallFunc_LineTraceSingleByProfile_OutHit, bool CallFunc_LineTraceSingleByProfile_ReturnValue);
+	void Get_Forward_Collision_Points(class ABPCharacter_Demo_C* PushingActor, float Axis, TArray<struct FVector>* CollisionPoints, const TArray<struct FVector>& NewLocalVar_0, bool Temp_bool_Variable, bool CallFunc_Greater_FloatFloat_ReturnValue, const struct FVector& CallFunc_GetActorRightVector_ReturnValue, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue, const struct FVector& CallFunc_GetActorForwardVector_ReturnValue, bool Temp_bool_Variable_1, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue_1, const struct FVector& CallFunc_GetActorForwardVector_ReturnValue_1, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue_2, const struct FVector2D& CallFunc_Conv_VectorToVector2D_ReturnValue_3, float CallFunc_DotProduct2D_ReturnValue, float CallFunc_DotProduct2D_ReturnValue_1, bool CallFunc_Less_FloatFloat_ReturnValue, bool CallFunc_Greater_FloatFloat_ReturnValue_1, bool CallFunc_Not_PreBool_ReturnValue, bool CallFunc_Not_PreBool_ReturnValue_1, bool K2Node_Select_Default, bool K2Node_Select_Default_1, TArray<struct FVector>& CallFunc_GetForwardBoundingPoints_ReturnValue, TArray<struct FVector>& CallFunc_GetRightBoundingPoints_ReturnValue, float CallFunc_Abs_ReturnValue, bool CallFunc_Greater_FloatFloat_ReturnValue_2);
+	void OnRep_CanPush(bool CallFunc_Not_PreBool_ReturnValue, bool CallFunc_Not_PreBool_ReturnValue_1);
+	void OnRep_Active();
+	void UserConstructionScript(const struct FTransform& CallFunc_MakeTransform_ReturnValue, const struct FTransform& CallFunc_MakeTransform_ReturnValue_1, bool CallFunc_SetStaticMesh_ReturnValue, const struct FTransform& CallFunc_MakeTransform_ReturnValue_2, const struct FHitResult& CallFunc_K2_SetRelativeTransform_SweepHitResult, const struct FHitResult& CallFunc_K2_SetRelativeTransform_SweepHitResult_1, bool CallFunc_SetStaticMesh_ReturnValue_1, const struct FHitResult& CallFunc_K2_SetRelativeTransform_SweepHitResult_2, bool K2Node_SwitchInteger_CmpSuccess, bool CallFunc_SetStaticMesh_ReturnValue_2);
+	void OnActorUsed(class ACharacter* Character);
+	void ExecuteUbergraph_BP_Pushable(int32 EntryPoint, class ACharacter* K2Node_Event_Character, class ABPCharacter_Demo_C* K2Node_DynamicCast_AsBPCharacter_Demo, bool K2Node_DynamicCast_bSuccess, class AController* CallFunc_GetController_ReturnValue, bool CallFunc_Not_PreBool_ReturnValue, class AMP_PlayerController_C* K2Node_DynamicCast_AsMP_Player_Controller, bool K2Node_DynamicCast_bSuccess_1, const struct FHE_Subtitle& K2Node_MakeStruct_HE_Subtitle, bool CallFunc_IsValid_ReturnValue, TArray<struct FHE_Subtitle>& K2Node_MakeArray_Array, bool CallFunc_Not_PreBool_ReturnValue_1, const struct FHE_SubtitleSeq& K2Node_MakeStruct_HE_SubtitleSeq, bool CallFunc_IsValid_ReturnValue_1);
+};
+
+}
+
+
