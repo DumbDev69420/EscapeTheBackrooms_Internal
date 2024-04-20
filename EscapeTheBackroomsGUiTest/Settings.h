@@ -167,13 +167,7 @@ namespace PlayerStuff {
 				this->IsSpectator = true;
 			}
 
-			int Sizecc = name.size();
-			for (size_t i = 0; i < 14; i++)
-			{
-				if (i >= Sizecc) break;
-
-				Sanitizedname += name[i];
-			}
+			this->Sanitizedname = SanitizeWString(Name);
 
 			auto LocString = LocToWString(location);
 
@@ -194,6 +188,21 @@ namespace PlayerStuff {
 					Inventory_.push_back(inventory[i]->Structure.Name);
 				}
 			}
+		}
+
+		static std::wstring SanitizeWString(std::wstring Input) {
+			std::wstring output = L"";
+
+			int Sizecc = Input.size();
+
+			for (size_t i = 0; i < 14; i++)
+			{
+				if (i >= Sizecc) break;
+
+				output += Input[i];
+			}
+
+			return output;
 		}
 
 		static std::vector<std::wstring> LocToWString(SDK::FVector loc) {

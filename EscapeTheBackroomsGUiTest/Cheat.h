@@ -2606,9 +2606,9 @@ namespace Cheat {
 
 									int isOwner = StateBP->PlayerId == PlayerStuff::PlayerList[0].PlayerID && StateBP->PlayerId < PlayerController->PlayerState->PlayerId;
 
-									std::string Role = isOwner ? " (Owner)" : "";
+									std::wstring Role = isOwner ? L" (Owner)" : L"";
 
-									UsefullFuncs::DrawBoxOnActor(Canvas, CurrentEnemy, isOwner ? UsefullFuncs::RGBATOFLinear(0, 255, 255, 255) : UsefullFuncs::RGBATOFLinear(0, 255, 0, 255), true, UsefullFuncs::stringToWideString(std::string(StateBP->PlayerNamePrivate.ToString() + Role)).c_str());
+									UsefullFuncs::DrawBoxOnActor(Canvas, CurrentEnemy, isOwner ? UsefullFuncs::RGBATOFLinear(0, 255, 255, 255) : UsefullFuncs::RGBATOFLinear(0, 255, 0, 255), true, std::wstring(PlayerStuff::Player::SanitizeWString(StateBP->PlayerNamePrivate.ToWString()) + Role).c_str());
 								}
 
 
