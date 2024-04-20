@@ -1617,6 +1617,8 @@ namespace Cheat {
 								BPCharacter->CurrentInteractingPawn = boat;
 								BPCharacter->Interact(boat);
 
+
+								Settings::IniShitsPlayer[5] = false;
 							}
 						}
 					}
