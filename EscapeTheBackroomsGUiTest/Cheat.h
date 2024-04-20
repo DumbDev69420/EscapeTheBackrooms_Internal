@@ -1613,11 +1613,10 @@ namespace Cheat {
 							if ( Parent == BPCharacter) {
 								auto boat = (SDK::ABoatPawn*)Boats_2[i];
 
-								Settings::IniShitsPlayer[5] = false;
-								
 								BPCharacter->K2_SetActorLocation(boat->K2_GetActorLocation(), false, 0, true);
 								BPCharacter->CurrentInteractingPawn = boat;
 								BPCharacter->Interact(boat);
+
 							}
 						}
 					}
