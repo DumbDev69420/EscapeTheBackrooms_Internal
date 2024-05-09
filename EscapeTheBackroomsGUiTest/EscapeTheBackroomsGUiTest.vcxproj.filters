@@ -22,6 +22,9 @@
     <Filter Include="Quelldateien\SDK">
       <UniqueIdentifier>{53f1abc9-974e-496b-adbb-45a701a650ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headerdateien\Data">
+      <UniqueIdentifier>{af4a5384-604f-4524-93cc-ca60a54a5fb4}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -5753,6 +5756,9 @@
     </ClInclude>
     <ClInclude Include="HostModifiers.h">
       <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="C:\Users\sonny\Downloads\backgroundpng\Out\IncludeFile.h">
+      <Filter>Headerdateien\Data</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

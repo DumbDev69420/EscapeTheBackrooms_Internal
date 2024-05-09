@@ -300,6 +300,7 @@ namespace Settings {
 	//Misc
 
 	bool ProtectCamServer = true;
+	bool TestEvent_PrintSteamIDS = false;
 	bool UnlockPlayers = false;
 	bool UnpossePawns = false;
 	bool ChangeNameEvent = false;
@@ -340,7 +341,7 @@ namespace Settings {
 	bool AutoRespawnPlayers = true;
 	bool wtf_ = false;
 	bool IniShitsLevel[6];
-	bool IniShitsPlayer[7];
+	bool IniShitsPlayer[8];
 
 	bool SpawnItem = false;
 	Items ItemToSpawn;

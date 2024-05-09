@@ -3,8 +3,8 @@
 #include <algorithm>
 #include "Cheat.h"
 #include <MinHook.h>
+#include <IncludeFile.h>
 
-#define Gatekeep
 
 typedef void (*PostRender_t)(SDK::UObject* pObject, SDK::UCanvas* pCanvas);
 PostRender_t origin_renderer;
@@ -12,6 +12,10 @@ PostRender_t origin_renderer;
 typedef void(__stdcall* fnProcessEvent)(SDK::UObject* Object, SDK::UFunction* Function, void* Params);
 fnProcessEvent fnProcessEventOrigin;
 fnProcessEvent fnProcessEventTarget;
+
+std::vector<ByteData> Datas;
+CWINGui::GifData* GifBackground;
+
 
 std::wstring stringToWideString(const std::string& str)
 {
@@ -177,7 +181,7 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 		auto obj_ = (SDK::UW_Kicked_C*)Obj;
 		auto params_ = (SDK::Params::UW_Kicked_C_Tick_Params*)Parms;
 
-		auto mssg = Cheat::TextLib->Conv_StringToText(SDK::FString(L"Host the Broke ass Nigga kicked you lmao"));
+		auto mssg = Cheat::TextLib->Conv_StringToText(SDK::FString(L"Host the Broke ass fella kicked you lmao"));
 
 		obj_->TextBlock_Message->SetText(mssg);
 
@@ -189,6 +193,8 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 
 	return fnProcessEventOrigin(Obj, Function, Parms);
 }
+
+SDK::UTexture2D* ImageTexture = nullptr;
 
 
 void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
@@ -240,6 +246,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 			int Size = 0;
 
 			Cheat::DrawTextRGBWithFString(Canvas, SDK::FString(L"Spectator List:"), SDK::FVector2D(10, SpectatorListPositionY), SDK::FLinearColor(0.0f, 1.0f, 0.0f, 1.0f), false, 1.1f);
+			
 
 			for (size_t i = 0; i < PlayerStuff::PlayerList.size(); i++)
 			{
@@ -252,7 +259,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 		static SDK::FVector2D WindowSize = { 500.0f, 555.0f };
 
-		if (CWINGui::Window("Escape The Backrooms Internal", &Settings::WindowPos, WindowSize, Settings::Open))
+		if (CWINGui::Window("Escape The Backrooms Internal", &Settings::WindowPos, WindowSize, Settings::Open, GifBackground))
 		{
 			static int tab = 1;
 			if (CWINGui::ButtonTab(L"Game Shit", SDK::FVector2D{ 110, 35 }, tab == 0)) { tab = 0; WindowSize = { 500.0f, 640.0f }; }
@@ -297,7 +304,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				if (CWINGui::Button(L"Bring Tapes", SDK::FVector2D{ 110, 35 })) {
 					Settings::BringAllItems = true;
 				}
-#ifdef Gatekeep
+#ifdef DEBUG
 				if (CWINGui::Button(L"Unposses Pawn", SDK::FVector2D{ 110, 35 })) {
 					Settings::UnpossePawns = true;
 				}
@@ -311,6 +318,13 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				if (CWINGui::Button(L"Clear Items", SDK::FVector2D{ 110, 35 })) {
 					Settings::ClearItems = true;
 				}
+
+#ifdef DEBUG
+				if (CWINGui::Button(L"Test Print", SDK::FVector2D{ 110, 35 })) {
+					Settings::TestEvent_PrintSteamIDS = true;
+				}
+#endif // DEBUG
+
 				if (CWINGui::Button(L"Alloc Console", SDK::FVector2D{ 110, 35 })) {
 					Settings::wtf_ = true;
 					/*auto arrayAudio = Cheat::AudioData(std::vector<int8>{0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0});
@@ -346,11 +360,9 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				CWINGui::Checkbox(L"GodMode (Host Only)(Works only on some Enemies)", &Settings::Godmode);
 				CWINGui::Checkbox(L"Speedhack", &Settings::SpeedHack);
 				CWINGui::Checkbox(L"Interactables always on", &Settings::InteractAll);
-#ifdef Gatekeep
 				CWINGui::Checkbox(L"NameChanger", &Settings::NameChanger);
 				/*CWINGui::Checkbox(L"NameChanger Random", &Settings::RandomName);*/
 				CWINGui::Checkbox(L"Spawner", &Settings::Spawner);
-#endif
 				CWINGui::Checkbox(L"Fov Changer", &Settings::FovChanger);
 				CWINGui::SliderFloat(L"Fov", &Settings::Fov, 10.0f, 200.0f);
 				CWINGui::SliderFloat(L"Speed", &Settings::Speed, 100, 10000);
@@ -375,8 +387,6 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				//	}
 				//}
 
-				
-#ifdef Gatekeep
 				if (Settings::NameChanger)
 				{
 					static bool hasfinishedConsole = false;
@@ -402,7 +412,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 					}
 				}
-#endif
+
 				break;
 			case 3:
 				CWINGui::Text(L"Item Spawner:");
@@ -512,7 +522,6 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 
 			case 6:
-#ifdef Gatekeep
 
 				CWINGui::Text(std::wstring(L"Spoofed as Player: " + (Settings::PlayerPicked != -1 ? PlayerStuff::PlayerList[Settings::PlayerPicked].name : std::wstring(L"None")) ).c_str());
 
@@ -588,9 +597,6 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				}
 				
 
-				
-
-#endif
 				break;
 
 			case 7:
@@ -848,12 +854,11 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 						Settings::UseItemEventPlayer = true;
 					}
 
-#ifdef Gatekeep
 					if (CWINGui::Button(L"Collect Player info", SDK::FVector2D{ 110, 35 })) {
 						Settings::Event_PlayerID = player.PlayerID;
 						Settings::EventCollectDataPlayer = true;
 					}
-#endif
+
 				}
 				else
 				{
@@ -915,6 +920,8 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 			std::cout << "[*] Unhooked Renderfunc\n[*] Freeing Console!\n";
 			ConsoleExit();
 			
+
+			delete GifBackground;
 		}
 
 	}
@@ -959,6 +966,21 @@ void MainThread() {
 
 		std::cout << "Failed to get: " << renderError << processeventError << "" << "!\n";
 		ConsoleExit();
+	}
+	else
+	{
+		Datas = GetBytes();
+
+		std::vector<SDK::UTexture2D*> TexturesCopy;
+
+		for (size_t i = 0; i < Datas.size(); i++)
+		{
+			std::vector<byte> ByteData(Datas[i].ByteSize); std::memcpy(ByteData.data(), Datas[i].DataPointer, Datas[i].ByteSize);
+
+			TexturesCopy.push_back(CWINGui::LoadTexture(ByteData));
+		}
+
+		GifBackground = new CWINGui::GifData(TexturesCopy, 100);
 	}
 
 	return;

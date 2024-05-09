@@ -72,6 +72,7 @@ namespace Cheat {
 	SDK::UKismetStringLibrary* StringLib = 0x0;
 	SDK::UKismetTextLibrary* TextLib = 0x0;
 	SDK::UGameplayStatics* GPStatics = 0x0;
+	SDK::UKismetRenderingLibrary* RenderLib = 0x0;
 	SDK::AMP_PlayerController_C* PlayerController = 0x0;
 	SDK::ULocalPlayer* LocalPlayer = 0x0;
 	SDK::ULevel* CurLevel = 0x0;
@@ -167,6 +168,8 @@ namespace Cheat {
 		TextLib = (SDK::UKismetTextLibrary*)SDK::UObject::FindClassFast("KismetTextLibrary")->DefaultObject;
 
 		GPStatics = (SDK::UGameplayStatics*)SDK::UObject::FindClassFast("GameplayStatics")->DefaultObject;
+
+		RenderLib = (SDK::UKismetRenderingLibrary*)SDK::UObject::FindClassFast("KismetRenderingLibrary")->DefaultObject;
 
 		CWINGui::Font = SDK::UObject::FindObject<SDK::UFont>("Font Roboto.Roboto");
 
@@ -1322,6 +1325,29 @@ namespace Cheat {
 		//Esp shit, World needed obviously else crashes
 		if (Ok || Stages >= 6) {
 
+#ifdef DEBUG //Will have to reverse some shit later. For now wont work
+			if (Settings::TestEvent_PrintSteamIDS) {
+				Settings::TestEvent_PrintSteamIDS = false;
+
+				auto Players = PlayerStuff::PlayerList;
+
+				for (size_t i = 0; i < Players.size(); i++)
+				{
+					auto Controller = (SDK::APlayerController*)Players[i].Pawn_->Controller;
+
+					if (Controller) {
+						auto NetConnection = Controller->NetConnection;
+
+						if (NetConnection) {
+
+						}
+					}
+				}
+			}
+
+#endif
+
+
 			if (PlayerController->SpectatorPawn) {
 
 			}
@@ -1571,7 +1597,7 @@ namespace Cheat {
 				}
 
 
-#ifdef Gatekeep
+#ifdef DEBUG
 
 				//Spawn stuff inside your hand, that wasnt supposed to even Spawn in there (Exploit 1, Dangerous Exploit)
 				if (Settings::Spawner) {
@@ -1698,7 +1724,7 @@ namespace Cheat {
 						}
 						else
 						{
-							Message("Couldnt Spawn Rope. Class Not Found");
+							Message("Couldnt Spawn Firework. Class Not Found");
 						}
 						//BPCharacter->CustomTimeDilation = 0.001f;
 					}
@@ -1831,10 +1857,9 @@ namespace Cheat {
 
 
 				{ // Only works as Host
-					BPCharacter->CanJumpscare = false;
-					BPCharacter->CanKill = false;
+					
 
-					if (BPCharacter->Climb) {
+					if (BPCharacter->Climb) { //Fast climb ladder
 						BPCharacter->Climb->TheTimeline.Length = 0.0f;
 					}
 
@@ -1971,7 +1996,7 @@ namespace Cheat {
 						
 					}
 
-#ifdef Gatekeep
+#ifdef DEBUG
 
 					//Spawn ropes anywhere you want, how often you want also. (Exploit 3, severe)
 					if (GetAsyncKeyState(VK_F2)& 1 && BPCharacter->CurrentItem_Rep) {
@@ -1985,7 +2010,7 @@ namespace Cheat {
 						}
 					}
 
-#endif // Gatekeep
+#endif // No real Frontend implementation for this, for now
 
 
 					if (GetAsyncKeyState(VK_F3) & 1)
@@ -2226,7 +2251,7 @@ namespace Cheat {
 
 					}
 
-#ifdef Gatekeep
+#ifdef DEBUG //Debugging purposes
 					if (Settings::UnpossePawns) {
 						Settings::UnpossePawns = false;
 
@@ -2377,7 +2402,7 @@ namespace Cheat {
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X - UPVector.X, PlayerPos.Y - UPVector.Y, PlayerPos.Z - UPVector.Z), false, 0, true);
 						}
 
-#ifdef Gatekeep
+#ifdef DEBUG //no real frontend for this yet
 						if (GetAsyncKeyState(VK_F1)) {
 							BPCharacter->StartPushingActor_SERVER((SDK::ABP_Pushable_C*)PlayerController->AcknowledgedPawn, PlayerController->AcknowledgedPawn->K2_GetActorLocation(), PlayerController->ControlRotation);
 							BPCharacter->StopPushingActor_SERVER((SDK::ABP_Pushable_C*)PlayerController->AcknowledgedPawn);
@@ -2523,7 +2548,7 @@ namespace Cheat {
 						}
 
 
-						if (CurrentInteractable->IsUsable && !CurrentInteractable->WasUsed) {
+						if (CurrentInteractable->IsUsable) {
 
 							SDK::FVector2D ScreenPos;
 							auto Location = CurrentInteractable->K2_GetActorLocation();
@@ -2556,6 +2581,7 @@ namespace Cheat {
 				SDK::UClass* StaticSkinMf = nullptr;
 				SDK::UClass* StaticBacteriaMf = nullptr;
 				SDK::UClass* StaticHowlerMf = nullptr;
+				SDK::UClass* StaticABPCharacter = SDK::ABPCharacter_Demo_C::StaticClass();
 
 
 
@@ -2566,15 +2592,15 @@ namespace Cheat {
 				if (Settings::RandomName)
 					srand(time(NULL));
 
+
+
 				for (size_t i = 0; i < EnemyArray.Num(); i++)
 				{
 					if (!EnemyArray.IsValidIndex(i) || !EnemyArray[i] || EnemyArray[i] == PlayerController->Character)continue;
 
 					auto CurrentEnemy = (SDK::ACharacter*)EnemyArray[i];
 
-					auto Name = CurrentEnemy->Name.ToString();
-
-					if (Name.find("BPCharacter_Demo_C") != std::string::npos) {
+					if (CurrentEnemy->Class->IsA(StaticABPCharacter)) {
 
 						auto CharacterBP = (SDK::ABPCharacter_Demo_C*)CurrentEnemy;
 						auto StateBP = (SDK::AMP_PS_C*)CharacterBP->PlayerState;
@@ -2649,6 +2675,14 @@ namespace Cheat {
 
 
 						if (Settings::Godmode) {
+							
+							if (!Settings::IniShitsPlayer[7]) {
+								Settings::IniShitsPlayer[7] = true;
+								BPCharacter->CanJumpscare = false;
+								BPCharacter->CanKill = false;
+							}
+							
+
 							auto Name = CurrentEnemy->Class->Name;
 							if (StaticSkinMf && Name == StaticSkinMf->Name) {
 								auto SkinSteala = (SDK::ABP_SkinStealer_C*)CurrentEnemy;
@@ -2673,7 +2707,15 @@ namespace Cheat {
 										//	Howlerdude->CanAttack = false;
 									}
 						}
+						else
+						{
+							if (Settings::IniShitsPlayer[7]) {
+								Settings::IniShitsPlayer[7] = false;
 
+								BPCharacter->CanJumpscare = true;
+								BPCharacter->CanKill = true;
+							}
+						}
 
 						if (Settings::EnemyEsp) {
 							UsefullFuncs::DrawBoxOnActor(Canvas, CurrentEnemy, UsefullFuncs::RGBATOFLinear(255, 0, 0, 255));

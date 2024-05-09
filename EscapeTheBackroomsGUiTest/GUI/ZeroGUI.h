@@ -383,7 +383,38 @@ namespace CWINGui
 	FVector2D dragPos;
 	void DrawThunder(FVector2D Size, FVector2D Pos);
 
-	bool Window(const char* name, FVector2D* pos, FVector2D size, bool isOpen)
+	struct GifData {
+		std::vector<SDK::UTexture2D*> TextureArray;
+		int CurrentIndex;
+		ULONGLONG Const_Delay;
+		ULONGLONG CurrentTickDelay;
+
+		GifData(std::vector<SDK::UTexture2D*> Array, ULONGLONG AnimationDelay) {
+			this->TextureArray = Array;
+			this->Const_Delay = AnimationDelay;
+			this->CurrentIndex = 0;
+			this->CurrentTickDelay = 0;
+		}
+
+		SDK::UTexture2D* GetCurrentImage() {
+			SDK::UTexture2D* Texture_ = TextureArray[CurrentIndex];
+
+			if (GetTickCount64() >= CurrentTickDelay) {
+				CurrentTickDelay = GetTickCount64() + Const_Delay;
+
+				if (CurrentIndex + 1 >= TextureArray.size())
+					CurrentIndex = 0;
+				else
+					CurrentIndex++;
+			}
+
+			return Texture_;
+		}
+	};
+
+	void DrawTexture(SDK::UTexture2D* texture, SDK::FVector2D ScreenPos, SDK::FVector2D ScreenSize, float rotation = 0.0f, SDK::FLinearColor color = {1.0f, 1.0f, 1.0f, 1.0f}, SDK::EBlendMode BlendMode = SDK::EBlendMode::BLEND_Masked);
+
+	bool Window(const char* name, FVector2D* pos, FVector2D size, bool isOpen, GifData* Gif = nullptr)
 	{
 		elements_count = 0;
 
@@ -437,9 +468,21 @@ namespace CWINGui
 		current_element_pos = FVector2D{ 0, 0 };
 		current_element_size = FVector2D{ 0, 0 };
 
-		//Bg
-		drawFilledRect(FVector2D{ pos->X, pos->Y }, size.X, size.Y, Colors::Window_Background);
-		//drawFilledRect(FVector2D{ pos->X, pos->Y }, 122, size.Y, FLinearColor{ 0.006f, 0.006f, 0.006f, 1.0f });//My tabs bg
+
+		if (Gif) {
+			auto Texture = Gif->GetCurrentImage();
+
+			drawFilledRect(FVector2D{ pos->X, pos->Y }, size.X, 25.0f, { 49 / 255,  49 / 255, 49 / 255, 1.0f});
+
+			DrawTexture(Texture, { pos->X, pos->Y }, { size.X, size.Y });
+		}
+		else
+		{
+			//Bg
+			drawFilledRect(FVector2D{ pos->X, pos->Y }, size.X, size.Y, Colors::Window_Background);
+			//drawFilledRect(FVector2D{ pos->X, pos->Y }, 122, size.Y, FLinearColor{ 0.006f, 0.006f, 0.006f, 1.0f });//My tabs bg
+		}
+	
 
 		//Header
 		drawFilledRect(FVector2D{ pos->X, pos->Y }, size.X, 25.0f, Colors::Window_Header);
@@ -738,6 +781,57 @@ namespace CWINGui
 
 		drawFilledRect(SDK::FVector2D{ RootPosition.X - (Width / 1.5f), RootPosition.Y - 10 }, Width + (Width / 3), Height, SDK::FLinearColor{ 1, 1, 1, 0.1f });
 		drawFilledRect(SDK::FVector2D{ RootPosition.X - (Width / 1.5f), RootPosition.Y - 10 + (Height / 6) }, (Width) * (Shield / 100), Height2, ShieldColor);
+	}
+
+	SDK::UTexture2D* LoadTexture(const wchar_t* Path) {
+		UTexture2D* LoadedTexture = nullptr;
+
+		auto RenderClass = SDK::UKismetRenderingLibrary::StaticClass();
+
+		if (RenderClass) {
+			auto RenderingLibrary = (SDK::UKismetRenderingLibrary*)RenderClass->DefaultObject;
+
+			if(RenderingLibrary)
+				LoadedTexture = RenderingLibrary->ImportFileAsTexture2D(SDK::UWorld::GetWorld(), SDK::FString(Path));
+		}
+		
+
+		return LoadedTexture;
+	}
+
+	SDK::UTexture2D* LoadTexture(std::vector<byte> Texture) {
+		UTexture2D* LoadedTexture = nullptr;
+
+		auto RenderClass = SDK::UKismetRenderingLibrary::StaticClass();
+
+		if (RenderClass) {
+			auto RenderingLibrary = (SDK::UKismetRenderingLibrary*)RenderClass->DefaultObject;
+
+			if (RenderingLibrary) {
+				SDK::TArray<uint8> BufferArray = SDK::TArray<uint8>(Texture.size());
+
+				void** ptr = (void**)&BufferArray;
+				int* Size = (int*)( (uintptr_t)(&BufferArray) + 0x8);
+
+				std::memcpy(ptr[0], Texture.data(), sizeof(uint8) * Texture.size());
+
+				*Size = Texture.size();
+
+				LoadedTexture = RenderingLibrary->ImportBufferAsTexture2D(SDK::UWorld::GetWorld(), BufferArray);
+
+				delete[] ptr[0];
+			}
+				
+		}
+
+
+		return LoadedTexture;
+	}
+
+
+	void DrawTexture(SDK::UTexture2D* texture, SDK::FVector2D ScreenPos, SDK::FVector2D ScreenSize, float rotation, SDK::FLinearColor color, SDK::EBlendMode BlendMode) {
+		if(texture)
+		canvas->K2_DrawTexture(texture, ScreenPos, ScreenSize, { 1.0f, 1.0f }, { 1.0f, 1.0f }, color, BlendMode, rotation, { 1.0f, 1.0f });
 	}
 
 	void Checkbox(const wchar_t* name, bool* value)
