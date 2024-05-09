@@ -1,0 +1,253 @@
+#pragma once
+#include <vector>
+
+
+#include "File0.h"
+#include "File1.h"
+#include "File2.h"
+#include "File3.h"
+#include "File4.h"
+#include "File5.h"
+#include "File6.h"
+#include "File7.h"
+#include "File8.h"
+#include "File9.h"
+#include "File10.h"
+#include "File11.h"
+#include "File12.h"
+#include "File13.h"
+#include "File14.h"
+#include "File15.h"
+#include "File16.h"
+#include "File17.h"
+#include "File18.h"
+#include "File19.h"
+#include "File20.h"
+#include "File21.h"
+#include "File22.h"
+#include "File23.h"
+#include "File24.h"
+#include "File25.h"
+#include "File26.h"
+#include "File27.h"
+#include "File28.h"
+#include "File29.h"
+#include "File30.h"
+#include "File31.h"
+#include "File32.h"
+#include "File33.h"
+#include "File34.h"
+#include "File35.h"
+#include "File36.h"
+#include "File37.h"
+#include "File38.h"
+#include "File39.h"
+#include "File40.h"
+#include "File41.h"
+#include "File42.h"
+#include "File43.h"
+#include "File44.h"
+#include "File45.h"
+#include "File46.h"
+#include "File47.h"
+#include "File48.h"
+#include "File49.h"
+#include "File50.h"
+#include "File51.h"
+#include "File52.h"
+#include "File53.h"
+#include "File54.h"
+#include "File55.h"
+#include "File56.h"
+#include "File57.h"
+#include "File58.h"
+#include "File59.h"
+#include "File60.h"
+#include "File61.h"
+#include "File62.h"
+#include "File63.h"
+#include "File64.h"
+#include "File65.h"
+#include "File66.h"
+#include "File67.h"
+#include "File68.h"
+#include "File69.h"
+#include "File70.h"
+#include "File71.h"
+#include "File72.h"
+#include "File73.h"
+#include "File74.h"
+#include "File75.h"
+#include "File76.h"
+#include "File77.h"
+#include "File78.h"
+#include "File79.h"
+#include "File80.h"
+#include "File81.h"
+#include "File82.h"
+#include "File83.h"
+#include "File84.h"
+#include "File85.h"
+#include "File86.h"
+#include "File87.h"
+#include "File88.h"
+#include "File89.h"
+#include "File90.h"
+#include "File91.h"
+#include "File92.h"
+#include "File93.h"
+#include "File94.h"
+#include "File95.h"
+#include "File96.h"
+#include "File97.h"
+#include "File98.h"
+#include "File99.h"
+#include "File100.h"
+#include "File101.h"
+#include "File102.h"
+#include "File103.h"
+#include "File104.h"
+#include "File105.h"
+#include "File106.h"
+#include "File107.h"
+#include "File108.h"
+#include "File109.h"
+#include "File110.h"
+#include "File111.h"
+#include "File112.h"
+#include "File113.h"
+#include "File114.h"
+#include "File115.h"
+#include "File116.h"
+#include "File117.h"
+#include "File118.h"
+
+  struct ByteData {
+  unsigned char* DataPointer;
+  size_t ByteSize;
+};
+
+std::vector<ByteData> GetBytes() {
+      std::vector<ByteData> byteArray;
+
+      byteArray.push_back({rawData0,sizeof(rawData0) }); 
+      byteArray.push_back({rawData1,sizeof(rawData1) }); 
+      byteArray.push_back({rawData2,sizeof(rawData2) }); 
+      byteArray.push_back({rawData3,sizeof(rawData3) }); 
+      byteArray.push_back({rawData4,sizeof(rawData4) }); 
+      byteArray.push_back({rawData5,sizeof(rawData5) }); 
+      byteArray.push_back({rawData6,sizeof(rawData6) }); 
+      byteArray.push_back({rawData7,sizeof(rawData7) }); 
+      byteArray.push_back({rawData8,sizeof(rawData8) }); 
+      byteArray.push_back({rawData9,sizeof(rawData9) }); 
+      byteArray.push_back({rawData10,sizeof(rawData10) }); 
+      byteArray.push_back({rawData11,sizeof(rawData11) }); 
+      byteArray.push_back({rawData12,sizeof(rawData12) }); 
+      byteArray.push_back({rawData13,sizeof(rawData13) }); 
+      byteArray.push_back({rawData14,sizeof(rawData14) }); 
+      byteArray.push_back({rawData15,sizeof(rawData15) }); 
+      byteArray.push_back({rawData16,sizeof(rawData16) }); 
+      byteArray.push_back({rawData17,sizeof(rawData17) }); 
+      byteArray.push_back({rawData18,sizeof(rawData18) }); 
+      byteArray.push_back({rawData19,sizeof(rawData19) }); 
+      byteArray.push_back({rawData20,sizeof(rawData20) }); 
+      byteArray.push_back({rawData21,sizeof(rawData21) }); 
+      byteArray.push_back({rawData22,sizeof(rawData22) }); 
+      byteArray.push_back({rawData23,sizeof(rawData23) }); 
+      byteArray.push_back({rawData24,sizeof(rawData24) }); 
+      byteArray.push_back({rawData25,sizeof(rawData25) }); 
+      byteArray.push_back({rawData26,sizeof(rawData26) }); 
+      byteArray.push_back({rawData27,sizeof(rawData27) }); 
+      byteArray.push_back({rawData28,sizeof(rawData28) }); 
+      byteArray.push_back({rawData29,sizeof(rawData29) }); 
+      byteArray.push_back({rawData30,sizeof(rawData30) }); 
+      byteArray.push_back({rawData31,sizeof(rawData31) }); 
+      byteArray.push_back({rawData32,sizeof(rawData32) }); 
+      byteArray.push_back({rawData33,sizeof(rawData33) }); 
+      byteArray.push_back({rawData34,sizeof(rawData34) }); 
+      byteArray.push_back({rawData35,sizeof(rawData35) }); 
+      byteArray.push_back({rawData36,sizeof(rawData36) }); 
+      byteArray.push_back({rawData37,sizeof(rawData37) }); 
+      byteArray.push_back({rawData38,sizeof(rawData38) }); 
+      byteArray.push_back({rawData39,sizeof(rawData39) }); 
+      byteArray.push_back({rawData40,sizeof(rawData40) }); 
+      byteArray.push_back({rawData41,sizeof(rawData41) }); 
+      byteArray.push_back({rawData42,sizeof(rawData42) }); 
+      byteArray.push_back({rawData43,sizeof(rawData43) }); 
+      byteArray.push_back({rawData44,sizeof(rawData44) }); 
+      byteArray.push_back({rawData45,sizeof(rawData45) }); 
+      byteArray.push_back({rawData46,sizeof(rawData46) }); 
+      byteArray.push_back({rawData47,sizeof(rawData47) }); 
+      byteArray.push_back({rawData48,sizeof(rawData48) }); 
+      byteArray.push_back({rawData49,sizeof(rawData49) }); 
+      byteArray.push_back({rawData50,sizeof(rawData50) }); 
+      byteArray.push_back({rawData51,sizeof(rawData51) }); 
+      byteArray.push_back({rawData52,sizeof(rawData52) }); 
+      byteArray.push_back({rawData53,sizeof(rawData53) }); 
+      byteArray.push_back({rawData54,sizeof(rawData54) }); 
+      byteArray.push_back({rawData55,sizeof(rawData55) }); 
+      byteArray.push_back({rawData56,sizeof(rawData56) }); 
+      byteArray.push_back({rawData57,sizeof(rawData57) }); 
+      byteArray.push_back({rawData58,sizeof(rawData58) }); 
+      byteArray.push_back({rawData59,sizeof(rawData59) }); 
+      byteArray.push_back({rawData60,sizeof(rawData60) }); 
+      byteArray.push_back({rawData61,sizeof(rawData61) }); 
+      byteArray.push_back({rawData62,sizeof(rawData62) }); 
+      byteArray.push_back({rawData63,sizeof(rawData63) }); 
+      byteArray.push_back({rawData64,sizeof(rawData64) }); 
+      byteArray.push_back({rawData65,sizeof(rawData65) }); 
+      byteArray.push_back({rawData66,sizeof(rawData66) }); 
+      byteArray.push_back({rawData67,sizeof(rawData67) }); 
+      byteArray.push_back({rawData68,sizeof(rawData68) }); 
+      byteArray.push_back({rawData69,sizeof(rawData69) }); 
+      byteArray.push_back({rawData70,sizeof(rawData70) }); 
+      byteArray.push_back({rawData71,sizeof(rawData71) }); 
+      byteArray.push_back({rawData72,sizeof(rawData72) }); 
+      byteArray.push_back({rawData73,sizeof(rawData73) }); 
+      byteArray.push_back({rawData74,sizeof(rawData74) }); 
+      byteArray.push_back({rawData75,sizeof(rawData75) }); 
+      byteArray.push_back({rawData76,sizeof(rawData76) }); 
+      byteArray.push_back({rawData77,sizeof(rawData77) }); 
+      byteArray.push_back({rawData78,sizeof(rawData78) }); 
+      byteArray.push_back({rawData79,sizeof(rawData79) }); 
+      byteArray.push_back({rawData80,sizeof(rawData80) }); 
+      byteArray.push_back({rawData81,sizeof(rawData81) }); 
+      byteArray.push_back({rawData82,sizeof(rawData82) }); 
+      byteArray.push_back({rawData83,sizeof(rawData83) }); 
+      byteArray.push_back({rawData84,sizeof(rawData84) }); 
+      byteArray.push_back({rawData85,sizeof(rawData85) }); 
+      byteArray.push_back({rawData86,sizeof(rawData86) }); 
+      byteArray.push_back({rawData87,sizeof(rawData87) }); 
+      byteArray.push_back({rawData88,sizeof(rawData88) }); 
+      byteArray.push_back({rawData89,sizeof(rawData89) }); 
+      byteArray.push_back({rawData90,sizeof(rawData90) }); 
+      byteArray.push_back({rawData91,sizeof(rawData91) }); 
+      byteArray.push_back({rawData92,sizeof(rawData92) }); 
+      byteArray.push_back({rawData93,sizeof(rawData93) }); 
+      byteArray.push_back({rawData94,sizeof(rawData94) }); 
+      byteArray.push_back({rawData95,sizeof(rawData95) }); 
+      byteArray.push_back({rawData96,sizeof(rawData96) }); 
+      byteArray.push_back({rawData97,sizeof(rawData97) }); 
+      byteArray.push_back({rawData98,sizeof(rawData98) }); 
+      byteArray.push_back({rawData99,sizeof(rawData99) }); 
+      byteArray.push_back({rawData100,sizeof(rawData100) }); 
+      byteArray.push_back({rawData101,sizeof(rawData101) }); 
+      byteArray.push_back({rawData102,sizeof(rawData102) }); 
+      byteArray.push_back({rawData103,sizeof(rawData103) }); 
+      byteArray.push_back({rawData104,sizeof(rawData104) }); 
+      byteArray.push_back({rawData105,sizeof(rawData105) }); 
+      byteArray.push_back({rawData106,sizeof(rawData106) }); 
+      byteArray.push_back({rawData107,sizeof(rawData107) }); 
+      byteArray.push_back({rawData108,sizeof(rawData108) }); 
+      byteArray.push_back({rawData109,sizeof(rawData109) }); 
+      byteArray.push_back({rawData110,sizeof(rawData110) }); 
+      byteArray.push_back({rawData111,sizeof(rawData111) }); 
+      byteArray.push_back({rawData112,sizeof(rawData112) }); 
+      byteArray.push_back({rawData113,sizeof(rawData113) }); 
+      byteArray.push_back({rawData114,sizeof(rawData114) }); 
+      byteArray.push_back({rawData115,sizeof(rawData115) }); 
+      byteArray.push_back({rawData116,sizeof(rawData116) }); 
+      byteArray.push_back({rawData117,sizeof(rawData117) }); 
+      byteArray.push_back({rawData118,sizeof(rawData118) }); 
+return byteArray;
+}
