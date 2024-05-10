@@ -350,6 +350,7 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 				if (PlayerNameChanges[i].first == CallingController) {
 
 					if (PlayerNameChanges[i].second.size() > 1) {
+						Cheat::MessageW(std::format(L"Player {} tried to Change Name too soon again. Maybe Player is using a Name Changer", PlayerStuff::Player::SanitizeWString(CallingController->PlayerState->PlayerNamePrivate.ToWString())));
 						return;
 					}
 					else
