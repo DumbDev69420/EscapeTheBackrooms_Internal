@@ -38,10 +38,12 @@ namespace FunctionPtrsProcessEvent {
 		W_Kicked_C_Tick,
 		Lobby_PlayerController_CReceiveBeginPlay,
 		BPCharacter_Demo_C_SpawnEquipItem_SERVER,
-
+		APlayerController_ServerChangeName,
+		AMP_PlayerController_C_ReceiveEndPlay,
+		Lobby_PlayerController_C_ReceiveEndPlay
 	};
 
- void* FunctionHooks[5];
+ void* FunctionHooks[8];
 
  const size_t FunctionHookSize = sizeof(FunctionHooks) / 8;
 
@@ -175,6 +177,72 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 		}
 	}
 
+
+	static std::vector < std::pair<SDK::APlayerController*, std::vector<std::wstring>> > PlayerNameChanges;
+
+	if (!FunctionPtrsProcessEvent::FunctionHooks[APlayerController_ServerChangeName]) {
+		static ULONGLONG TickCount_ = 0;
+		auto Tick = GetTickCount64();
+
+		if (Tick >= TickCount_) {
+			TickCount_ = Tick + 100;
+
+			auto Class_ = SDK::APlayerController::StaticClass();
+
+			if (Class_)
+			{
+				auto Func = Class_->GetFunction("PlayerController", "ServerChangeName");
+				if (Func)
+				{
+					PlayerNameChanges.clear();
+					FunctionPtrsProcessEvent::FunctionHooks[5] = Func;
+				}
+			}
+		}
+	}
+
+	if (!FunctionPtrsProcessEvent::FunctionHooks[AMP_PlayerController_C_ReceiveEndPlay]) {
+
+
+		static ULONGLONG TickCount_ = 0;
+		auto Tick = GetTickCount64();
+
+		if (Tick >= TickCount_) {
+			TickCount_ = Tick + 100;
+
+			auto Class_ = SDK::ABPCharacter_Demo_C::StaticClass();
+
+			if (Class_)
+			{
+				auto Func = Class_->GetFunction("MP_PlayerController_C", "ReceiveEndPlay");
+				if (Func)
+				{
+					FunctionPtrsProcessEvent::FunctionHooks[6] = Func;
+				}
+			}
+		}
+	}
+
+	if (!FunctionPtrsProcessEvent::FunctionHooks[Lobby_PlayerController_C_ReceiveEndPlay]) {
+
+		static ULONGLONG TickCount_ = 0;
+		auto Tick = GetTickCount64();
+
+		if (Tick >= TickCount_) {
+			TickCount_ = Tick + 100;
+
+			auto Class_ = SDK::ALobby_PlayerController_C::StaticClass();
+
+			if (Class_)
+			{
+				auto Func = Class_->GetFunction("Lobby_PlayerController_C", "ReceiveEndPlay");
+				if (Func)
+				{
+					FunctionPtrsProcessEvent::FunctionHooks[7] = Func;
+				}
+			}
+		}
+	}
 #pragma endregion
 
 
@@ -230,7 +298,7 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 		SDK::AMP_GameMode_C* GameMode = nullptr;
 
 		if (CallingPawn->Controller) {
-			auto world = SDK::UWorld::GetWorld();
+			auto world = Cheat::Engine->GameViewport->World;
 			IsLocalHost = true; 
 			GameMode = (SDK::AMP_GameMode_C*)world->AuthorityGameMode;
 
@@ -258,6 +326,62 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 					Cheat::MessageW(L"Nullpointer was passed to SpawnEquipItem, kicking that bad Cheater!");
 					GameMode->KickPlayer(CallingPawn->PlayerState, CallingPawn->GetOwner(), (SDK::AMP_PlayerController_C*)CallingPawn->Controller, true, true);
 				}
+			}
+		}
+	}
+
+	
+	if (execF == FunctionHooks[APlayerController_ServerChangeName]) {
+		auto CallingController = (SDK::APlayerController*)Obj;
+		auto paramsServerChangeName = (SDK::Params::APlayerController_ServerChangeName_Params*)Parms;
+
+		std::wstring NewName = paramsServerChangeName->S.ToWString();
+
+		auto world = Cheat::Engine->GameViewport->World;
+		bool IsLocalHost = false;
+
+		if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
+			IsLocalHost = (CallingController == LocalPlayer->PlayerController);
+		}
+
+		if (!IsLocalHost) {
+			for (size_t i = 0; i < PlayerNameChanges.size(); i++)
+			{
+				if (PlayerNameChanges[i].first == CallingController) {
+
+					if (PlayerNameChanges[i].second.size() > 1) {
+						return;
+					}
+					else
+					{
+						PlayerNameChanges[i].second.push_back(NewName);
+						break;
+					}
+				}
+			}
+		}
+	}
+
+	if (execF == FunctionHooks[AMP_PlayerController_C_ReceiveEndPlay]) {
+		auto CallingController = (SDK::AMP_PlayerController_C*)Obj;
+
+		for (size_t i = 0; i < PlayerNameChanges.size(); i++)
+		{
+			if (PlayerNameChanges[i].first == CallingController) {
+				PlayerNameChanges.erase(PlayerNameChanges.begin() + i);
+				break;
+			}
+		}
+	}
+
+	if (execF == FunctionHooks[Lobby_PlayerController_C_ReceiveEndPlay]) {
+		auto CallingController = (SDK::ALobby_PlayerController_C*)Obj;
+
+		for (size_t i = 0; i < PlayerNameChanges.size(); i++)
+		{
+			if (PlayerNameChanges[i].first == CallingController) {
+				PlayerNameChanges.erase(PlayerNameChanges.begin() + i);
+				break;
 			}
 		}
 	}
