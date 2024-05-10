@@ -31,31 +31,43 @@ void ConsoleExit() {
 }
 
 namespace FunctionPtrsProcessEvent {
- void* Lobby_PlayerController_COC_KickedFromLobby = nullptr;
- void* MP_PlayerController_COC_KickedFromLobby = nullptr;
- void* Lobby_PlayerController_CReceiveBeginPlay = nullptr;
- void* W_Kicked_C_Tick = nullptr;
+	enum FunctionDefs
+	{
+		Lobby_PlayerController_COC_KickedFromLobby,
+		MP_PlayerController_COC_KickedFromLobby,
+		W_Kicked_C_Tick,
+		Lobby_PlayerController_CReceiveBeginPlay,
+		BPCharacter_Demo_C_SpawnEquipItem_SERVER,
+
+	};
+
+ void* FunctionHooks[5];
+
+ const size_t FunctionHookSize = sizeof(FunctionHooks) / 8;
 
  void NullObjects() {
-	 Lobby_PlayerController_COC_KickedFromLobby = nullptr;
-	 MP_PlayerController_COC_KickedFromLobby = nullptr;
-	 Lobby_PlayerController_CReceiveBeginPlay = nullptr;
-	 W_Kicked_C_Tick = nullptr;
+
+	 for (size_t i = 0; i < FunctionHookSize; i++)
+	 {
+		 FunctionHooks[i] = nullptr;
+	 }
  }
 
 };
 
 
 void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) {
+	using namespace FunctionPtrsProcessEvent;
 
 	auto execF = Function;
 
-	
+
 
 
 #pragma region FindPointers
 
-	if (!FunctionPtrsProcessEvent::Lobby_PlayerController_COC_KickedFromLobby) {
+
+	if (!FunctionPtrsProcessEvent::FunctionHooks[Lobby_PlayerController_COC_KickedFromLobby]) {
 
 		static ULONGLONG TickCount_ = 0;
 		auto Tick = GetTickCount64();
@@ -70,13 +82,13 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 				auto Func = Class_->GetFunction("Lobby_PlayerController_C", "OC_KickedFromLobby");
 				if (Func)
 				{
-					FunctionPtrsProcessEvent::Lobby_PlayerController_COC_KickedFromLobby = Func;
+					FunctionPtrsProcessEvent::FunctionHooks[0] = Func;
 				}
 			}
 		}
 	}
 
-	if (!FunctionPtrsProcessEvent::MP_PlayerController_COC_KickedFromLobby) {
+	if (!FunctionPtrsProcessEvent::FunctionHooks[MP_PlayerController_COC_KickedFromLobby]) {
 
 		static ULONGLONG TickCount_ = 0;
 		auto Tick = GetTickCount64();
@@ -91,13 +103,13 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 				auto Func = Class_->GetFunction("MP_PlayerController_C", "OC_KickedFromLobby");
 				if (Func)
 				{
-					FunctionPtrsProcessEvent::MP_PlayerController_COC_KickedFromLobby = Func;
+					FunctionPtrsProcessEvent::FunctionHooks[1] = Func;
 				}
 			}
 		}
 	}
 
-	if (!FunctionPtrsProcessEvent::W_Kicked_C_Tick) {
+	if (!FunctionPtrsProcessEvent::FunctionHooks[W_Kicked_C_Tick]) {
 
 		static ULONGLONG TickCount_ = 0;
 		auto Tick = GetTickCount64();
@@ -113,15 +125,15 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 
 				if (Func)
 				{
-					FunctionPtrsProcessEvent::W_Kicked_C_Tick = Func;
+					FunctionPtrsProcessEvent::FunctionHooks[2] = Func;
 
 				}
 			}
 		}
 	}
 
-	
-	if (!FunctionPtrsProcessEvent::Lobby_PlayerController_CReceiveBeginPlay) {
+
+	if (!FunctionPtrsProcessEvent::FunctionHooks[Lobby_PlayerController_CReceiveBeginPlay]) {
 
 		static ULONGLONG TickCount_ = 0;
 		auto Tick = GetTickCount64();
@@ -136,17 +148,38 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 				auto Func = Class_->GetFunction("Lobby_PlayerController_C", "ReceiveBeginPlay");
 				if (Func)
 				{
-					FunctionPtrsProcessEvent::Lobby_PlayerController_CReceiveBeginPlay = Func;
+					FunctionPtrsProcessEvent::FunctionHooks[3] = Func;
 				}
 			}
 		}
-	} 
+	}
+
+	if (!FunctionPtrsProcessEvent::FunctionHooks[BPCharacter_Demo_C_SpawnEquipItem_SERVER]) {
+
+		static ULONGLONG TickCount_ = 0;
+		auto Tick = GetTickCount64();
+
+		if (Tick >= TickCount_) {
+			TickCount_ = Tick + 100;
+
+			auto Class_ = SDK::ABPCharacter_Demo_C::StaticClass();
+
+			if (Class_)
+			{
+				auto Func = Class_->GetFunction("BPCharacter_Demo_C", "SpawnEquipItem_SERVER");
+				if (Func)
+				{
+					FunctionPtrsProcessEvent::FunctionHooks[4] = Func;
+				}
+			}
+		}
+	}
 
 #pragma endregion
 
 
 
-	if (execF == FunctionPtrsProcessEvent::Lobby_PlayerController_COC_KickedFromLobby || execF == FunctionPtrsProcessEvent::MP_PlayerController_COC_KickedFromLobby) {
+	if (execF == FunctionHooks[Lobby_PlayerController_COC_KickedFromLobby] || execF == FunctionHooks[MP_PlayerController_COC_KickedFromLobby]) {
 		Cheat::MainRun(nullptr);
 
 		if (Obj == Cheat::PlayerController) {
@@ -158,18 +191,18 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 			return;
 		}
 
-		
+
 	}
 
-	if (execF == FunctionPtrsProcessEvent::Lobby_PlayerController_CReceiveBeginPlay) {
+	if (execF == FunctionHooks[Lobby_PlayerController_CReceiveBeginPlay]) {
 
 		Cheat::MainRun(nullptr);
 
 		if (Obj != Cheat::PlayerController) {
 			SDK::ALobby_PlayerController_C* Controller = (SDK::ALobby_PlayerController_C*)Obj;
 
-			if(Controller->PlayerState)
-			Cheat::Message(std::string("Player " + Controller->PlayerState->PlayerNamePrivate.ToString() + "joined your Game!"));
+			if (Controller->PlayerState)
+				Cheat::Message(std::string("Player " + Controller->PlayerState->PlayerNamePrivate.ToString() + "joined your Game!"));
 		}
 		else
 		{
@@ -177,19 +210,57 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 		}
 	}
 
-	if (execF == FunctionPtrsProcessEvent::W_Kicked_C_Tick) {
+	if (execF == FunctionHooks[W_Kicked_C_Tick]) {
 		auto obj_ = (SDK::UW_Kicked_C*)Obj;
 		auto params_ = (SDK::Params::UW_Kicked_C_Tick_Params*)Parms;
 
 		auto mssg = Cheat::TextLib->Conv_StringToText(SDK::FString(L"Host the Broke ass fella kicked you lmao"));
 
 		obj_->TextBlock_Message->SetText(mssg);
-
-
-
 	}
 	
+	if (execF == FunctionHooks[BPCharacter_Demo_C_SpawnEquipItem_SERVER]) {
+		auto CallingPawn = (SDK::ABPCharacter_Demo_C*)Obj;
 
+		auto params_ = (SDK::Params::ABPCharacter_Demo_C_SpawnEquipItem_SERVER_Params*)Parms;
+
+		bool IsLocalHost = false;
+		bool IsLocalPlayer = false;
+
+		SDK::AMP_GameMode_C* GameMode = nullptr;
+
+		if (CallingPawn->Controller) {
+			auto world = SDK::UWorld::GetWorld();
+			IsLocalHost = true; 
+			GameMode = (SDK::AMP_GameMode_C*)world->AuthorityGameMode;
+
+			if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
+				IsLocalPlayer = (CallingPawn->Controller == LocalPlayer->PlayerController);
+			}
+		}
+
+		if (!IsLocalPlayer) {
+
+			if (auto ItemClass = params_->ItemClass; ItemClass) {
+
+				if (!ItemClass->IsA(SDK::ABP_Item_C::StaticClass())) {
+					if (IsLocalHost) {
+						Cheat::MessageW(L"Non Item was passed to SpawnEquipItem, kicking that bad Cheater!");
+						GameMode->KickPlayer(CallingPawn->PlayerState, CallingPawn->GetOwner(), (SDK::AMP_PlayerController_C*)CallingPawn->Controller, true, true);
+					}
+
+
+				}
+			}
+			else
+			{
+				if (IsLocalHost) {
+					Cheat::MessageW(L"Nullpointer was passed to SpawnEquipItem, kicking that bad Cheater!");
+					GameMode->KickPlayer(CallingPawn->PlayerState, CallingPawn->GetOwner(), (SDK::AMP_PlayerController_C*)CallingPawn->Controller, true, true);
+				}
+			}
+		}
+	}
 
 	return fnProcessEventOrigin(Obj, Function, Parms);
 }

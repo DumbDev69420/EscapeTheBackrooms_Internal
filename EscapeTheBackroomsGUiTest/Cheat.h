@@ -7,7 +7,7 @@
 #include "Settings.h"
 
 
-#define DEBUG
+//#define DEBUG
 #define Gatekeep
 
 void RunMainHost();

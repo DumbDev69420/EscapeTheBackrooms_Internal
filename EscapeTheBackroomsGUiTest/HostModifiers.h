@@ -6,7 +6,7 @@ namespace HostOptions {
 	{
 		ULONGLONG TickCount = GetTickCount64();
 
-		if (Settings::Host_CollisionPlayers || Settings::Host_Event_TeleportPlayers)
+		if (Settings::Host_CollisionPlayers || Settings::Host_FunMode || Settings::Host_Event_TeleportPlayers)
 		{
 			static ULONGLONG TickCount_Host = 0;
 
