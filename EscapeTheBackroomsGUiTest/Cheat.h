@@ -2600,7 +2600,7 @@ namespace Cheat {
 
 					auto CurrentEnemy = (SDK::ACharacter*)EnemyArray[i];
 
-					if (CurrentEnemy->Class->IsA(StaticABPCharacter)) {
+					if (CurrentEnemy->IsA(StaticABPCharacter)) {
 
 						auto CharacterBP = (SDK::ABPCharacter_Demo_C*)CurrentEnemy;
 						auto StateBP = (SDK::AMP_PS_C*)CharacterBP->PlayerState;
@@ -2637,7 +2637,7 @@ namespace Cheat {
 								//CharacterBP->CharacterMovement->MaxAcceleration = 20000.0f;
 								CharacterBP->CharacterMovement->GravityScale = 0.5f;
 								CharacterBP->K2_SetActorLocation(BPCharacter->K2_GetActorLocation(), false, 0, true);
-						}
+							}
 
 							if (Settings::PlayerEsp) {
 								if (StateBP)
@@ -2654,6 +2654,8 @@ namespace Cheat {
 
 
 							}
+
+							
 						}
 
 					}

@@ -1051,7 +1051,7 @@ void MainThread() {
 			TexturesCopy.push_back(CWINGui::LoadTexture(ByteData));
 		}
 
-		GifBackground = new CWINGui::GifData(TexturesCopy, 100);
+		GifBackground = new CWINGui::GifData(TexturesCopy, 50);
 	}
 
 	return;
