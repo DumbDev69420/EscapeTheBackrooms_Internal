@@ -332,7 +332,7 @@ namespace Settings {
 	//Misc
 
 	bool Freecam = false;
-	bool RejoinServer_Event = false,
+	//bool RejoinServer_Event = false,
 	bool ClickTpPawn = false;
 	bool UsedSpawnTest = false;
 	bool ProtectCamServer = true;
