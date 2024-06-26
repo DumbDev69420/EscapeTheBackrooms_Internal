@@ -1,8 +1,13 @@
 #pragma once
 #include <Windows.h>
+#include "../Cheat.h"
 
 namespace ZeroGUI
 {
+	bool isGameFocussed = false;
+	bool isInputLocked = false;
+	HWND CurrentWindow = NULL;
+
 	namespace Input
 	{
 		bool mouseDown[5];
@@ -61,7 +66,10 @@ namespace ZeroGUI
 
 		void Handle()
 		{
-			if (GetAsyncKeyState(0x01))
+			isGameFocussed = GetActiveWindow() == CurrentWindow;
+
+
+			if (GetAsyncKeyState(0x01) && !isInputLocked && isGameFocussed)
 			{
 				mouseDown[0] = true;
 			}

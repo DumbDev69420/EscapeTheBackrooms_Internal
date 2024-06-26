@@ -91,7 +91,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Include;$(IncludePath)</IncludePath>
     <LibraryPath>C:\Program Files %28x86%29\Microsoft DirectX SDK %28June 2010%29\Lib\x64;$(LibraryPath)</LibraryPath>
-    <ExternalIncludePath>C:\Users\sonny\Downloads\backgroundpng\Out;$(ExternalIncludePath)</ExternalIncludePath>
+    <ExternalIncludePath>U:\DCInParis\EscapeTheBackroomsGUiTest\EscapeTheBackroomsGUiTest\Out;$(ExternalIncludePath)</ExternalIncludePath>
   </PropertyGroup>
   <PropertyGroup Label="Vcpkg" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <VcpkgUseStatic>true</VcpkgUseStatic>
@@ -185,6 +185,8 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Cheat.h" />
+    <ClInclude Include="CheatDefines.h" />
+    <ClInclude Include="Config.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="HostModifiers.h" />
     <ClInclude Include="Out\File0.h" />
@@ -2216,6 +2218,7 @@
     <ClInclude Include="Settings.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="Config.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -2287,6 +2290,9 @@
     <ClCompile Include="SDK\SDK\MP_PlayerController_functions.cpp" />
     <ClCompile Include="SDK\SDK\MP_PoolRooms_functions.cpp" />
     <ClCompile Include="SDK\SDK\MP_PS_functions.cpp" />
+    <ClCompile Include="SDK\SDK\MP_Thallasophobia_functions.cpp" />
+    <ClCompile Include="SDK\SDK\Paper2D_functions.cpp" />
+    <ClCompile Include="SDK\SDK\SubtitleTextWB_functions.cpp" />
     <ClCompile Include="SDK\SDK\UMG_functions.cpp" />
     <ClCompile Include="SDK\SDK\WB_ChatMessage_functions.cpp" />
     <ClCompile Include="SDK\SDK\WB_Chat_functions.cpp" />

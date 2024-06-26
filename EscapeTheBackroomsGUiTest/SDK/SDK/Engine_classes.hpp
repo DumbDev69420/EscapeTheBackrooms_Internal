@@ -4610,7 +4610,7 @@ public:
 class UAssetManager : public UObject
 {
 public:
-	uint8                                        Pad_7A4[0x2B8];                                    // Fixing Size After Last Property  [ Dumper-7 ]
+	uint8                                        Pad_99B[0x2B8];                                    // Fixing Size After Last Property  [ Dumper-7 ]
 	TArray<class UObject*>                       ObjectReferenceList;                               // 0x2E0(0x10)(ZeroConstructor, Protected, NativeAccessSpecifierProtected)
 	bool                                         bIsGlobalAsyncScanEnvironment;                     // 0x2F0(0x1)(ZeroConstructor, IsPlainOldData, NoDestructor, Protected, HasGetValueTypeHash, NativeAccessSpecifierProtected)
 	bool                                         bShouldGuessTypeAndName;                           // 0x2F1(0x1)(ZeroConstructor, IsPlainOldData, NoDestructor, Protected, HasGetValueTypeHash, NativeAccessSpecifierProtected)
@@ -11006,7 +11006,9 @@ public:
 class ULevel : public UObject
 {
 public:
-	uint8                                        Pad_11E2[0x90];                                    // Fixing Size After Last Property  [ Dumper-7 ]
+	uint8                                        Pad_11E2[0x70];
+	TArray<class AActor*>                        Actors;
+	TArray<class AActor*>                        ActorsForGC;
 	class UWorld*                                OwningWorld;                                       // 0xB8(0x8)(ZeroConstructor, Transient, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	class UModel*                                Model;                                             // 0xC0(0x8)(ZeroConstructor, IsPlainOldData, NoDestructor, HasGetValueTypeHash, NativeAccessSpecifierPublic)
 	TArray<class UModelComponent*>               ModelComponents;                                   // 0xC8(0x10)(ExportObject, ZeroConstructor, ContainsInstancedReference, NativeAccessSpecifierPublic)

@@ -88,6 +88,7 @@ public:
 	{
 	}
 
+
 	inline T& operator[](uint32 Index)
 	{
 		return Data[Index];

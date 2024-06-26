@@ -1,10 +1,12 @@
-#include "SDK/SDK.hpp"
+﻿#include "SDK/SDK.hpp"
 #include <thread>
 #include <algorithm>
 #include "Cheat.h"
 #include <MinHook.h>
 #include <IncludeFile.h>
+#include "Config.h"
 
+FILE* ConsoleFile = nullptr;
 
 typedef void (*PostRender_t)(SDK::UObject* pObject, SDK::UCanvas* pCanvas);
 PostRender_t origin_renderer;
@@ -14,8 +16,11 @@ fnProcessEvent fnProcessEventOrigin;
 fnProcessEvent fnProcessEventTarget;
 
 std::vector<ByteData> Datas;
+ConfigSystem* configsys;
 CWINGui::GifData* GifBackground;
 
+
+void ExitCheat();
 
 std::wstring stringToWideString(const std::string& str)
 {
@@ -43,10 +48,9 @@ namespace FunctionPtrsProcessEvent {
 		Lobby_PlayerController_C_ReceiveEndPlay
 	};
 
- void* FunctionHooks[8];
+ void* FunctionHooks[9];
 
  const size_t FunctionHookSize = sizeof(FunctionHooks) / 8;
-
  void NullObjects() {
 
 	 for (size_t i = 0; i < FunctionHookSize; i++)
@@ -56,7 +60,7 @@ namespace FunctionPtrsProcessEvent {
  }
 
 };
-
+//SDK::APlayerController::IsInputKeyDown
 
 void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) {
 	using namespace FunctionPtrsProcessEvent;
@@ -243,9 +247,9 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 			}
 		}
 	}
+
+
 #pragma endregion
-
-
 
 	if (execF == FunctionHooks[Lobby_PlayerController_COC_KickedFromLobby] || execF == FunctionHooks[MP_PlayerController_COC_KickedFromLobby]) {
 		Cheat::MainRun(nullptr);
@@ -387,13 +391,15 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 		}
 	}
 
+
+
 	return fnProcessEventOrigin(Obj, Function, Parms);
 }
 
 SDK::UTexture2D* ImageTexture = nullptr;
 
-
 void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
+	static bool ShowHelp = true;
 
 	if (Canvas) {
 		//init menu
@@ -402,7 +408,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 		static Cheat::UsefullFuncs::RGBA RGBShit = { 0, 0, 0, 255 };
 		static SDK::FLinearColor RGBLinear = SDK::FLinearColor(Cheat::UsefullFuncs::RGBATOFLinear(RGBShit.R, RGBShit.G, RGBShit.B, RGBShit.A));
 
-		Cheat::UsefullFuncs::Rainbowify(&RGBShit);
+		Cheat::UsefullFuncs::Rainbowify(&RGBShit); //follows RGBA Rainbow values
 		RGBLinear = SDK::FLinearColor(Cheat::UsefullFuncs::RGBATOFLinear(RGBShit.R, RGBShit.G, RGBShit.B, RGBShit.A));
 
 		if (Settings::ShowWatermark) {
@@ -455,22 +461,76 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 		static SDK::FVector2D WindowSize = { 500.0f, 555.0f };
 
+		if (ShowHelp || Settings::NewVersion_) {
+			static SDK::FVector2D WindowPos = { 500.0f, 475.0f };
+
+			if (ShowHelp) {
+				if (CWINGui::Window("?", &WindowPos, WindowSize, ShowHelp)) {
+					CWINGui::Text(L"This Trainer was Originally Uploaded to Unknowncheats.");
+					CWINGui::Text(L"If you didnt Download it from Unknowncheats i would be carefull");
+
+					CWINGui::Text(L""), CWINGui::SameLine();
+
+					if (CWINGui::Button(L"Okay blud", SDK::FVector2D{ 110, 35 })) {
+						ShowHelp = false;
+					}
+				}
+			}
+			else
+			{
+				if (CWINGui::Window("?", &WindowPos, WindowSize, Settings::NewVersion_)) {
+					CWINGui::Text(std::format(L"New Version {}!!!", Settings::CheatVersion).c_str());
+
+					CWINGui::Text(L"* Added Server Sided Teleporting!");
+					CWINGui::Text(L"* Added Server Sided Object Spawner!");
+					CWINGui::Text(L"* Added Boat to Object Spawner.");
+					CWINGui::Text(L"* Added Config System");
+					CWINGui::Text(L"* Added Rope on Player to Player Options.");
+					CWINGui::Text(L"* Added Freecam and Server Sided Teleporter in Freecam.");
+					CWINGui::Text(L"* Added Freecam and Server Sided Teleporter in Freecam.");
+					CWINGui::Text(L"* Added some new Menu Designing.");
+					CWINGui::Text(L"* Added Chat Spoofer.");
+
+					CWINGui::Text(L""), CWINGui::SameLine();
+
+					if (CWINGui::Button(L"Okay blud....", SDK::FVector2D{ 110, 35 })) {
+						Settings::NewVersion_ = false;
+					}
+
+				}
+			}
+			
+
+			CWINGui::Draw_Cursor(ShowHelp);
+			CWINGui::Render();
+
+			if (GetAsyncKeyState(VK_DELETE) & 1)
+				ExitCheat();
+
+			return origin_renderer(object, Canvas);
+
+		}
+
+		const SDK::FVector2D DefaultValue = { 500.0f, 620.0f };
+
 		if (CWINGui::Window("Escape The Backrooms Internal", &Settings::WindowPos, WindowSize, Settings::Open, GifBackground))
 		{
 			static int tab = 1;
-			if (CWINGui::ButtonTab(L"Game Shit", SDK::FVector2D{ 110, 35 }, tab == 0)) { tab = 0; WindowSize = { 500.0f, 640.0f }; }
-			if (CWINGui::ButtonTab(L"World Visuals", SDK::FVector2D{ 110, 35 }, tab == 1)) { tab = 1; WindowSize = { 500.0f, 555.0f }; }
-			if (CWINGui::ButtonTab(L"Miscellaneous", SDK::FVector2D{ 110, 35 }, tab == 2)) { tab = 2; WindowSize = { 500.0f, 680.0f }; }
-			if (CWINGui::ButtonTab(L"Item Spawner", SDK::FVector2D{ 110, 35 }, tab == 3)) { tab = 3; WindowSize = { 500.0f, 620.0f }; }
-			if (CWINGui::ButtonTab(L"Level Miscs", SDK::FVector2D{ 110, 35 }, tab == 4)) { tab = 4; WindowSize = { 500.0f, 555.0f }; }
-			if (CWINGui::ButtonTab(L"Host Info", SDK::FVector2D{ 110, 35 }, tab == 5)) { tab = 5; WindowSize = { 500.0f, 555.0f }; }
+			if (CWINGui::ButtonTab(L"Game Shit", SDK::FVector2D{ 110, 35 }, tab == 0)) { tab = 0; CWINGui::ChangeWindowSize(WindowSize, { 500.0f, 640.0f }); }
+			if (CWINGui::ButtonTab(L"World Visuals", SDK::FVector2D{ 110, 35 }, tab == 1)) { tab = 1; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+			if (CWINGui::ButtonTab(L"Miscellaneous", SDK::FVector2D{ 110, 35 }, tab == 2)) { tab = 2; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+			if (CWINGui::ButtonTab(L"Item Spawner", SDK::FVector2D{ 110, 35 }, tab == 3)) { tab = 3; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+			if (CWINGui::ButtonTab(L"Level Miscs", SDK::FVector2D{ 110, 35 }, tab == 4)) { tab = 4; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+			if (CWINGui::ButtonTab(L"Host Info", SDK::FVector2D{ 110, 35 }, tab == 5)) { tab = 5; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 #ifdef Gatekeep
-			if (CWINGui::ButtonTab(L"Chat Spoofer", SDK::FVector2D{ 110, 35 }, tab == 6)) { tab = 6; WindowSize = { 540.0f, 625.0f }; }
+			if (CWINGui::ButtonTab(L"Chat Spoofer", SDK::FVector2D{ 110, 35 }, tab == 6)) { tab = 6; CWINGui::ChangeWindowSize(WindowSize, { 540.0f, 625.0f }); }
 #endif
-			if (CWINGui::ButtonTab(L"Level Loader", SDK::FVector2D{ 110, 35 }, tab == 7)) { tab = 7; WindowSize = { 740.0f, 575.0f }; }
+			if (CWINGui::ButtonTab(L"Level Loader", SDK::FVector2D{ 110, 35 }, tab == 7)) { tab = 7; CWINGui::ChangeWindowSize(WindowSize, { 740.0f, 575.0f }); }
 
-			if (CWINGui::ButtonTab(L"Players", SDK::FVector2D{ 110, 35 }, tab == 8)) { tab = 8; WindowSize = { 600.0f, 555.0f }; }
-			if (CWINGui::ButtonTab(L"Hosting Options", SDK::FVector2D{ 110, 35 }, tab == 10)) { tab = 10; WindowSize = { 600.0f, 555.0f }; }
+			if (CWINGui::ButtonTab(L"Players", SDK::FVector2D{ 110, 35 }, tab == 8)) { tab = 8; CWINGui::ChangeWindowSize(WindowSize, DefaultValue);}
+			if (CWINGui::ButtonTab(L"Hosting Options", SDK::FVector2D{ 110, 35 }, tab == 10)) { tab = 10; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+			if (CWINGui::ButtonTab(L"Config", SDK::FVector2D{ 110, 35 }, tab == 12)) { tab = 12; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+			if (Settings::Spawner_ && CWINGui::ButtonTab(L"Spawner Options", SDK::FVector2D{ 110, 35 }, tab == 11)) { tab = 11; CWINGui::ChangeWindowSize(WindowSize, DefaultValue);}
 
 			CWINGui::NextColumn(140.0f);
 			CWINGui::Text(L"");
@@ -483,7 +543,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 				CWINGui::Checkbox(std::wstring(LR"(Player "Fly" (Press Space))" + FlyText).c_str(), &Settings::PlayerFly);
 				CWINGui::Checkbox(LR"(Velocity Fly)", &Settings::VelocityFly);
-				CWINGui::SliderFloat(L"Flyspeed", &Settings::PlayerFlySpeedY, 0.01f, 1000.0f);
+				CWINGui::SliderFloat(L"Flyspeed (Boat & Player)", &Settings::PlayerFlySpeedY, 0.01f, 1000.0f);
 				if (CWINGui::Button(L"Hide Doors", SDK::FVector2D{ 110, 35 })) {
 					Settings::ActorEvent = true;
 					Settings::HideWalls = true;
@@ -540,15 +600,19 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				CWINGui::Checkbox(L"Interactables Esp", &Settings::InteractablesEsp);
 				CWINGui::Checkbox(L"Boat Esp", &Settings::BoatEsp);
 				CWINGui::Checkbox(L"Actor Esp", &Settings::ActorEsp);
+#ifdef DEBUG
+				CWINGui::Checkbox(L"Enemy Chams", &Settings::EnemyChams);
+#endif
 				CWINGui::Checkbox(L"Flashlight RGB", &Settings::RGBFlashlight);
 				CWINGui::Checkbox(L"Enviroment RGB", &Settings::EnviromentRGB);
 				break;
 
 			case 2:
 				CWINGui::Checkbox(L"Unlock Playercounter (100 Players)", RGBLinear, &Settings::UnlockPlayers);
+				CWINGui::Checkbox(L"Freecam (Activate with J, Teleport with F1)", SDK::FLinearColor{ 0.0f, 1.0f, 0.0f, 1.0f }, &Settings::Freecam);
+				CWINGui::Checkbox(L"Spawner (Lets you Spawn stuff!)", SDK::FLinearColor{ 0.92f, 0.22f, 0.91f, 1.0f }, &Settings::Spawner_);
 				CWINGui::Checkbox(L"Watermark", &Settings::ShowWatermark);
 				CWINGui::Checkbox(L"Boat Fly", &Settings::BoatFly);
-				CWINGui::Checkbox(L"Boat Speedhack", &Settings::BoatSpeedhack);
 				CWINGui::Checkbox(L"RapidFire", &Settings::Rapidfire);
 				CWINGui::Checkbox(L"Infinite Stamina", &Settings::InfiniteStamina);
 				CWINGui::Checkbox(L"Infinite Sanity", &Settings::InfiniteSanity);
@@ -558,11 +622,10 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				CWINGui::Checkbox(L"Interactables always on", &Settings::InteractAll);
 				CWINGui::Checkbox(L"NameChanger", &Settings::NameChanger);
 				/*CWINGui::Checkbox(L"NameChanger Random", &Settings::RandomName);*/
-				CWINGui::Checkbox(L"Spawner", &Settings::Spawner);
-				CWINGui::Checkbox(L"Fov Changer", &Settings::FovChanger);
-				CWINGui::SliderFloat(L"Fov", &Settings::Fov, 10.0f, 200.0f);
-				CWINGui::SliderFloat(L"Speed", &Settings::Speed, 100, 10000);
-				CWINGui::SliderFloat(L"Boat Speed", &Settings::BoatSpeed, 100, 10000);
+				CWINGui::Checkbox(L"Boat Speedhack", &Settings::BoatSpeedhack); CWINGui::SameLine(); CWINGui::last_element_pos.X += 20.0f, CWINGui::last_element_pos.Y -= 20.0f; CWINGui::SliderFloat(L"Boat Speed", &Settings::BoatSpeed, 100, 10000);
+				CWINGui::Checkbox(L"Speedhack", &Settings::SpeedHack); CWINGui::SameLine(); CWINGui::last_element_pos.X -= 80.0f, CWINGui::last_element_pos.Y -= 10.0f; CWINGui::SliderFloat(L"Speed", &Settings::Speed, 100, 10000);
+				CWINGui::Checkbox(L"Fov Changer", &Settings::FovChanger); CWINGui::SameLine(); CWINGui::last_element_pos.X -= 80.0f; CWINGui::SliderFloat(L"Fov", &Settings::Fov, 10.0f, 200.0f);
+
 
 				//{
 				//	static bool hasfinishedConsole = false;
@@ -1045,6 +1108,16 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 						Settings::EventRespawnPlayer = true;
 					}
 
+					if (CWINGui::Button(L"Spectate FCam Player", SDK::FVector2D{ 110, 35 })) {
+						Settings::Event_PlayerID = player.PlayerID;
+						Settings::SpectateEventPlayer = true;
+					}
+
+					if (CWINGui::Button(L"Spawn Rope Player", SDK::FVector2D{ 110, 35 })) {
+						Settings::Event_PlayerID = player.PlayerID;
+						Settings::SpawnRopeAtEventPlayer = true;
+					}
+
 					if (CWINGui::Button(L"Use item as Player", SDK::FVector2D{ 110, 35 })) {
 						Settings::Event_PlayerID = player.PlayerID;
 						Settings::UseItemEventPlayer = true;
@@ -1055,6 +1128,10 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 						Settings::EventCollectDataPlayer = true;
 					}
 
+					if (CWINGui::Button(L"Steal Pawn", SDK::FVector2D{ 110, 35 })) {
+						Settings::Event_PlayerID = player.PlayerID;
+						Settings::StealPawnEventPlayer = !Settings::StealPawnEventPlayer;
+					}
 				}
 				else
 				{
@@ -1076,13 +1153,97 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 				break;
 
+			case 11:
+				using namespace Settings;
+
+				if (CWINGui::Button(L"Spawn Boat", SDK::FVector2D{ 125, 35 })) {
+					Settings::SpawnerEvent = true;
+					Settings::SpawnerValue = Settings::Spawner::Spawner_Stuff::Boat;
+				}
+
+				if (CWINGui::Button(L"Spawn Rope", SDK::FVector2D{ 125, 35 })) {
+					Settings::SpawnerEvent = true;
+					Settings::SpawnerValue = Settings::Spawner::Spawner_Stuff::Rope;
+				}
+
+				if (CWINGui::Button(L"Spawn Exitzone", SDK::FVector2D{ 125, 35 })) {
+					Settings::SpawnerEvent = true;
+					Settings::SpawnerValue = Settings::Spawner::Spawner_Stuff::ExitZone;
+				}
+
+				if (CWINGui::Button(L"Spawn Bactiria", SDK::FVector2D{ 125, 35 })) {
+					Settings::SpawnerEvent = true;
+					Settings::SpawnerValue = Settings::Spawner::Spawner_Stuff::BactiriaMonster;
+				}
+
+				break;
+
+
+			case 12:
+			    {
+				static std::wstring CurrentConfigFileName = L"";
+
+				if (CurrentConfigFileName == L"") {
+					CurrentConfigFileName = configsys->GetCurrentConfigNameW();
+				}
+
+				CWINGui::Text((L"Current Config File: " + CurrentConfigFileName).c_str());
+
+
+				if (CWINGui::Button(L"Load Current Config", SDK::FVector2D{ 125, 35 })) {
+					configsys->ActivateConfig(configsys->GetCurrentConfigName().substr (0, configsys->GetCurrentConfigName().find(".escp")), configsys->GetSettingsPath());
+					Settings::AddFieldsToConfig(configsys);
+					configsys->WriteToFields();
+
+					//SetName_NameChanger((wchar_t*)Settings::CurrentName_Saved);
+				}
+
+				if (CWINGui::Button(L"Create/Change Config", SDK::FVector2D{ 125, 35 })) {
+	
+					if (!CurrentInputThread_Config)
+					{
+
+						std::thread::id mainThreadId = std::this_thread::get_id();
+
+						std::thread t([mainThreadId]() {
+							if (std::this_thread::get_id() != mainThreadId) {
+								std::string Out__ = "";
+								bool finished = false;
+
+								Cheat::GetInput("Enter the Name for the Config File:", Out__, finished);
+
+								if (!configsys->ActivateConfig(Out__, configsys->GetSettingsPath())) {
+									Cheat::Message("Failed to Change Config File!, Changing to Default");
+									if (!configsys->ActivateConfig("config1", configsys->GetSettingsPath()))
+										Cheat::Message("Failed to Change to Default Config File. Fuck you tbh");
+								}
+
+								Settings::AddFieldsToConfig(configsys);
+
+								CurrentInputThread_Config = nullptr;
+								CurrentConfigFileName = L"";
+							}
+						});
+
+						CurrentInputThread_Config = &t;
+
+						t.detach();
+					}
+				}
+
+				if (CWINGui::Button(L"Save to Current Config", SDK::FVector2D{ 125, 35 })) {
+					configsys->WriteToConfigFile();
+				}
+
+			    }
+				break;
 
 			default:
 				break;
 			}
+
 			
 		}
-
 		
 
 		CWINGui::Draw_Cursor(Settings::Open); //draw ugly ass cursor
@@ -1093,42 +1254,70 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 		if (GetAsyncKeyState(VK_INSERT) & 1)Settings::Open = !Settings::Open;
 
-		if (GetAsyncKeyState(VK_DELETE) & 1) {
-			SDK::UWorld* World = SDK::UWorld::GetWorld();
-			auto GameInstance = World->OwningGameInstance;
-			auto LocalPlayer = GameInstance->LocalPlayers[0];
-			auto ViewportClient = LocalPlayer->ViewportClient;
-			auto vTable = *(void***)(ViewportClient);
-			auto vTableWorld = *(void***)(World);
-			Functions::ChangePointer((uintptr_t)vTable, Offsets::PostRenderIdx, (uintptr_t)origin_renderer);
-
-			MH_DisableHook(MH_ALL_HOOKS);
-
-			MH_RemoveHook(fnProcessEventTarget);
-
-			Backend::NewLevelEvent.UnregisterHandlers();
-			//Functions::ChangePointer((uintptr_t)vTableWorld, Offsets::ProcessEventIdx, (uintptr_t)fnProcessEventOrigin);
-			
-
-			MH_Uninitialize();
-
-
-			std::cout << "[*] Unhooked Renderfunc\n[*] Freeing Console!\n";
-			ConsoleExit();
-			
-
-			delete GifBackground;
-		}
+		if (GetAsyncKeyState(VK_DELETE) & 1)
+			ExitCheat();
+		
 
 	}
 
 	return origin_renderer(object, Canvas);
 }
 
+void ExitCheat() {
+	SDK::UWorld* World = SDK::UWorld::GetWorld();
+	auto GameInstance = World->OwningGameInstance;
+	auto LocalPlayer = GameInstance->LocalPlayers[0];
+	SDK::APlayerController* PlayerController = LocalPlayer->PlayerController;
+	auto ViewportClient = LocalPlayer->ViewportClient;
+	auto vTable = *(void***)(ViewportClient);
+	auto vTableWorld = *(void***)(World);
+	Functions::ChangePointer((uintptr_t)vTable, Offsets::PostRenderIdx, (uintptr_t)origin_renderer);
+
+	MH_DisableHook(MH_ALL_HOOKS);
+
+	MH_RemoveHook(fnProcessEventTarget);
+
+	Backend::NewLevelEvent.UnregisterHandlers();
+	//Functions::ChangePointer((uintptr_t)vTableWorld, Offsets::ProcessEventIdx, (uintptr_t)fnProcessEventOrigin);
+
+
+	MH_Uninitialize();
+
+
+	//Not Working! Fix else keep massive memory leak!
+	for (SDK::UTexture2D* texture : GifBackground->TextureArray)
+	{
+		//Mark Textures as Garbage then set to nullptr
+		texture->Flags |= (1 << 21);
+		texture = nullptr;
+	}
+
+
+	if (PlayerController) //Clean Up stuff
+	{
+		if (!Settings::Open)
+			PlayerController->AcknowledgedPawn->EnableInput(LocalPlayer->PlayerController);
+	}
+
+	std::cout << "[*] Unhooked Renderfunc\n[*] Freeing Console!\n";
+	ConsoleExit();
+
+	configsys->ActivateConfig("menu_data", configsys->GetSettingsPath());
+
+	Settings::TimeSpendCheating += (GetTickCount64() - Settings::TickCountCheatTime);
+
+	configsys->AddField(&Settings::TimeSpendCheating, -1);
+
+	configsys->WriteToConfigFile(-1);
+
+	delete GifBackground;
+	delete configsys;
+}
+
 void MainThread() {
 
 	if (!Cheat::Ini()) {
-		Cheat::Message("Cheat needs to be Updated. Im up to Updating probly already ;)", FOREGROUND_GREEN);
+		Cheat::Message("Cheat needs to be Updated. Im up to Updating probly already", FOREGROUND_GREEN);
 		return;
 	}
 
@@ -1154,7 +1343,9 @@ void MainThread() {
 
 	MH_EnableHook(reinterpret_cast<LPVOID*>(fnProcessEventTarget));
 
+	ZeroGUI::CurrentWindow = FindWindowA("UnrealWindow", "EscapeTheBackrooms  ");
 
+	
 	if (!origin_renderer || !fnProcessEventOrigin) {
 		auto renderError = !origin_renderer ? "PostRender" : "";
 		std::string spacing = renderError != "" ? "," : "";
@@ -1165,6 +1356,55 @@ void MainThread() {
 	}
 	else
 	{
+		configsys = new ConfigSystem("menu_data");
+
+		float CheatVersion = Settings::CheatVersion;
+
+		configsys->AddField(&CheatVersion, -2);
+		configsys->AddField(&Settings::TimeSpendCheating, -1);
+
+		if (!configsys->WriteToFields()) {
+			configsys->WriteToConfigFile();
+
+			Settings::NewVersion_ = true;
+		}
+		else
+		{
+			if (CheatVersion != Settings::CheatVersion)
+				Settings::NewVersion_ = true;
+
+			auto val = Settings::TimeSpendCheating / 1000;
+
+			const char* TimeFormats[] = { "seconds", "minutes", "hours", "days" };
+
+			double TimeSplitValue[] = { 1000, 60000, 3600000, 86400000 };
+
+
+			// 0 = Seconds, 1 = Minutes, 2 = Hours, 3 = Days
+			int state = (val >= 60.0 ? (val /= 60.0, val >= 60.0 ? (val /= 24.0, val >= 24.0 ? 3 : 2) : 1) : 0);
+
+			auto Time = Settings::TimeSpendCheating / TimeSplitValue[state]; 
+
+			{ //Calculate the Comma Values too into the time;
+				int FormatCalculation[] = {0.4, 0.4, 0.4, 0.9};
+
+				double a_ = std::round(Time);
+				double Lösung = Time - (a_ - FormatCalculation[state]);
+
+				if (Lösung > 0.0) {
+					Time = a_ + Lösung;
+				}
+			}
+
+			Cheat::Message(std::format("Already spent Time Cheating: {:.2f} {}", Time, TimeFormats[state]));
+		}
+
+		Settings::TickCountCheatTime = GetTickCount64();
+
+		configsys->ActivateConfig("config1", configsys->GetSettingsPath());
+
+		Settings::AddFieldsToConfig(configsys);
+
 		Datas = GetBytes();
 
 		std::vector<SDK::UTexture2D*> TexturesCopy;
@@ -1191,14 +1431,13 @@ BOOL APIENTRY DllMain( HMODULE hModule,
     {
     case DLL_PROCESS_ATTACH:
 		AllocConsole();
-		FILE* fileptr;
-		freopen_s(&fileptr, "CONOUT$", "w", stdout);
-		freopen_s(&fileptr, "CONOUT$", "w", stderr);
-		freopen_s(&fileptr, "CONIN$", "r", stdin);
+		freopen_s(&ConsoleFile, "CONOUT$", "w", stdout);
+		freopen_s(&ConsoleFile, "CONOUT$", "w", stderr);
+		freopen_s(&ConsoleFile, "CONIN$", "r", stdin);
 		MainThread();
-    case DLL_THREAD_ATTACH:
-    case DLL_THREAD_DETACH:
-    case DLL_PROCESS_DETACH:
+		break;
+
+	default:
         break;
     }
     return TRUE;

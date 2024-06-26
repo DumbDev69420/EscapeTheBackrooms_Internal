@@ -5,63 +5,13 @@
 #include <format>
 #include <vector>
 #include "Settings.h"
+#include "CheatDefines.h"
 
 
 //#define DEBUG
 #define Gatekeep
 
 void RunMainHost();
-
-namespace Functions {
-	static void memcpy_(void* _Dst, void const* _Src, size_t _Size)
-	{
-		auto csrc = (char*)_Src;
-		auto cdest = (char*)_Dst;
-
-		for (int i = 0; i < _Size; i++)
-		{
-			cdest[i] = csrc[i];
-		}
-	}
-
-	//Generally just for checking dont call raw
-	DWORD GetMemoryProtection(LPVOID address)
-	{
-		MEMORY_BASIC_INFORMATION memInfo;
-		VirtualQuery(address, &memInfo, sizeof(memInfo));
-		return memInfo.Protect;
-	}
-
-	bool ShouldUsePointer64(void* ptrF) {
-		uintptr_t ptr = (uintptr_t)ptrF;
-		if (ptr == 0x0 || ptr < 0x10000000 || ptr > 0x7fffffffffff || GetMemoryProtection(reinterpret_cast<LPVOID>(ptr)) == PAGE_NOACCESS) return false;
-		return true;
-	}
-
-	template<typename T4>
-
-	bool WriteMemW(uintptr_t ptr, T4 const& Value) {
-		if (ptr < 0x10000000 || ptr > 0x7fffffffffff) return false;
-		DWORD d, ds;
-		int val2;
-		VirtualProtect((LPVOID)ptr, sizeof(Value), PAGE_EXECUTE_READWRITE, &d);
-		*reinterpret_cast<T4*>(ptr) = Value;
-		VirtualProtect((LPVOID)ptr, sizeof(Value), d, &ds);
-		return true;
-	}
-
-	uintptr_t ChangePointer(uintptr_t ptr, int Index, uintptr_t Value) {
-
-		uintptr_t ptrAddr = ptr + (0x8 * Index);
-		uintptr_t* blabla = (uintptr_t*)ptrAddr;
-		uintptr_t AddressBefore = *blabla;
-
-		WriteMemW(ptrAddr, Value);
-
-		return AddressBefore;
-	}
-
-}
 
 namespace Cheat {
 
@@ -79,75 +29,10 @@ namespace Cheat {
 	SDK::APawn* Pawn = 0x0;
 
 	bool Initialized = false;
+	bool LoadObjectValid_ = false;
 
-	struct FStaticConstructObjectParameters
-	{
-		/** The class of the object to create */
-		const SDK::UClass* Class;
-
-		/** The object to create this object within (the Outer property for the new object will be set to the value specified here). */
-		SDK::UObject* Outer;
-
-		/** The name to give the new object.If no value(NAME_None) is specified, the object will be given a unique name in the form of ClassName_#. */
-		SDK::FName Name;
-
-		/** The ObjectFlags to assign to the new object. some flags can affect the behavior of constructing the object. */
-		int SetFlags;
-
-		/** The InternalObjectFlags to assign to the new object. some flags can affect the behavior of constructing the object. */
-		unsigned int InternalSetFlags;
-
-		/** If true, copy transient from the class defaults instead of the pass in archetype ptr(often these are the same) */
-		bool bCopyTransientsFromClassDefaults = false;
-
-		/** If true, Template is guaranteed to be an archetype */
-		bool bAssumeTemplateIsArchetype = false;
-
-		/**
-		 * If specified, the property values from this object will be copied to the new object, and the new object's ObjectArchetype value will be set to this object.
-		 * If nullptr, the class default object is used instead.
-		 */
-		SDK::UObject* Template = nullptr;
-
-		/** Contains the mappings of instanced objects and components to their templates */
-		void* InstanceGraph = nullptr;
-
-		/** Assign an external Package to the created object if non-null */
-		SDK::UPackage* ExternalPackage = nullptr;
-	};
-
-	class AudioData : public SDK::TArray<int8>
-	{
-	public:
-		AudioData(std::vector<int8> Bytes) {
-			TArray(Bytes.size());
-
-			if (Data) {
-				std::memcpy(Data, Bytes.data(), (sizeof(int8) * this->MaxElements));
-			}
-		}
-
-		~AudioData() {
-
-			if (Data)
-				delete[] Data;
-		}
-	};
-
-
-
-	typedef SDK::UObject* (__fastcall* fStaticConstructObject_Internal)
-		(
-			FStaticConstructObjectParameters* Params
-			);
-	static fStaticConstructObject_Internal StaticConstructObject_Internal;
-
-	static SDK::UConsole* ConstructConsole(SDK::UClass* ConsoleClass, SDK::UObject* outer)
-	{
-		FStaticConstructObjectParameters params = { ConsoleClass, outer, SDK::FName{0,0}, 0, 0, false, false, nullptr, nullptr, nullptr };
-
-		return reinterpret_cast<SDK::UConsole*>(StaticConstructObject_Internal(&params));
-	}
+	void Message(const char* msg, DWORD Color);
+	void Message(std::string msg, DWORD Color);
 
 	bool Ini() {
 
@@ -174,11 +59,31 @@ namespace Cheat {
 		CWINGui::Font = SDK::UObject::FindObject<SDK::UFont>("Font Roboto.Roboto");
 
 		StaticConstructObject_Internal = (fStaticConstructObject_Internal)((uintptr_t)GetModuleHandle(0) + Offsets::StaticConstructObject_Internal);
+		StaticLoadObject_Internal = (fStaticLoadObject_Internal)((uintptr_t)GetModuleHandle(0) + Offsets::StaticLoadObjectInternal);
+		FPlatformFileManager$$Get = (fFPlatformFileManager$$Get)((uintptr_t)GetModuleHandle(0) + Offsets::FPlatformFileManager$$Get);
+		FPakPlatformFile$$FindPlatformFile = (fFPakPlatformFile$$FindPlatformFile)((uintptr_t)GetModuleHandle(0) + Offsets::FPakPlatformFile$$FindPlatformFile);
+		FPakPlatformFile$$Mount = (fFPakPlatformFile$$Mount)((uintptr_t)GetModuleHandle(0) + Offsets::FPakPlatformFile$$Mount);
 
+
+		std::vector<unsigned char> FunctionSig_Static{0x4c, 0x89, 0x4c, 0x24, 0x20};
+
+		std::vector<unsigned char> FunctionSig = Functions::GetFunctionSig(StaticLoadObject_Internal, 5);
+
+
+		if (FunctionSig.size() == 5) {
+			LoadObjectValid_ = (Functions::CompareFunctionSigs(FunctionSig, FunctionSig_Static) == 100);
+
+#ifdef DEBUG
+			Message(std::format("[DEBUG]: StaticloadObject Valid? {}", LoadObjectValid_ ? "false" : "true"), LoadObjectValid_ ? FOREGROUND_RED : FOREGROUND_GREEN);
+#endif
+		}
+
+		
 		Initialized = true;
 
 		return true;
 	}
+
 
 
 
@@ -431,30 +336,54 @@ namespace Cheat {
 
 	}
 
-	//void GetInput(std::string Text, std::string& Output, bool& hasFinished) {
-	//	IsInput = true;
-
-	//	std::cout << Text;
-	//	std::cin >> Output;
-
-	//	size_t lengthLine = Text.length() + Output.length();
-
-
-	//	std::cout << "\r"; 
-	//	std::cout << "\033[K";
-
-	//	EmptyQueue();
-
-	//	hasFinished = true;
-	//}
-
-	void GetInputW(std::string Text, std::wstring& Output, bool& hasFinished) {
+	void GetInput(std::string Text, std::string& Output, bool& hasFinished) {
 		if (IsInput)return;
+
+		SetForegroundWindow(GetConsoleWindow());
 
 		IsInput = true;
 
 		std::cout.clear();
 		std::cin.clear();
+
+		std::fflush(stdin);
+
+		Text = "[Input] " + Text;
+
+		std::cout << Text;
+
+
+		std::getline(std::cin, Output);
+
+		int lengthLine = Text.length() + Output.length();
+
+		MoveCursorConsole(0, -1);
+		MoveCursorConsole(-lengthLine, 0);
+
+
+		for (size_t i = 0; i < lengthLine; i++)
+		{
+			std::cout << " ";
+		}
+
+		MoveCursorConsole(-lengthLine, 0);
+
+		IsInput = false;
+
+		EmptyQueue();
+
+		hasFinished = true;
+	}
+
+	void GetInputW(std::string Text, std::wstring& Output, bool& hasFinished) {
+		if (IsInput)return;
+
+		SetForegroundWindow(GetConsoleWindow());
+
+		IsInput = true;
+
+		std::cout.clear();
+		std::wcin.clear();
 
 		std::fflush(stdin);
 
@@ -504,6 +433,10 @@ namespace Cheat {
 			return true;
 		}
 
+		bool IsKeyPressed(DWORD key, bool Holding = false) {
+			return (Holding ? (GetAsyncKeyState(key) & 1) : GetAsyncKeyState(key)) && ZeroGUI::isGameFocussed;
+		}
+
 		bool IniObjects() {
 			Stages = 0;
 
@@ -521,8 +454,32 @@ namespace Cheat {
 
 			bool Changedlvl = false;
 
+
 			if (CurLevel != WorldP->PersistentLevel) {
 				CurLevel = WorldP->PersistentLevel;
+
+				/*auto Instances = Cheat::FindInstances(SDK::APostProcessVolume::StaticClass());
+
+				for (size_t i = 0; i < Instances.size(); i++)
+				{
+					auto CurrentProcess = (SDK::APostProcessVolume*)Instances[i];
+
+					auto ProcessComponent = (SDK::UPostProcessComponent*)CurrentProcess->GetComponentByClass(SDK::UPostProcessComponent::StaticClass());
+
+					SDK::UMaterialInstance* blabla;
+
+					SDK::TArray<SDK::FWeightedBlendable> WeightedArray = ProcessComponent->Settings.WeightedBlendables.Array;
+
+					ProcessComponent->Settings.WeightedBlendables.Array = SDK::TArray<SDK::FWeightedBlendable>(ProcessComponent->Settings.WeightedBlendables.Array.Num() + 1);
+
+					for (size_t i = 0; i < WeightedArray.Num(); i++)
+					{
+						ProcessComponent->Settings.WeightedBlendables.Array[i] = WeightedArray[i];
+					}
+
+					ProcessComponent->Settings.WeightedBlendables.Array[ProcessComponent->Settings.WeightedBlendables.Array.Num() - 1].Weight = 1.0f;
+					ProcessComponent->Settings.WeightedBlendables.Array[ProcessComponent->Settings.WeightedBlendables.Array.Num() - 1].Object = blabla;
+				}*/
 
 				Changedlvl = true;
 
@@ -543,6 +500,7 @@ namespace Cheat {
 				{
 					WorldP->NetDriver->ConnectionTimeout = 10.0f;
 
+					Backend::HostID = WorldP->NetDriver->ServerConnection->URL_.Host.ToWString();
 					Backend::HostSteamID = WorldP->NetDriver->ServerConnection->URL_.Host.ToString();
 
 					Backend::CleanSteamID();
@@ -854,7 +812,7 @@ namespace Cheat {
 	}
 
 	SDK::UObject* FindInstance(SDK::UClass* Class) {
-		static SDK::UObject* Object = nullptr;
+		SDK::UObject* Object = nullptr;
 
 		if (!Object)
 		{
@@ -878,7 +836,7 @@ namespace Cheat {
 
 
 	std::vector<SDK::UObject*> FindInstances(SDK::UClass* Class) {
-		static std::vector<SDK::UObject*> Objects;
+		std::vector<SDK::UObject*> Objects;
 
 		for (int i = 0; i < SDK::UObject::GObjects->Num(); i++)
 		{
@@ -891,6 +849,45 @@ namespace Cheat {
 			{
 				Objects.push_back(Obj);
 				continue;
+			}
+		}
+
+		return Objects;
+	}
+
+	SDK::AActor* GetActorOfClass(SDK::UWorld* World, SDK::UClass* Class) {
+		SDK::AActor* ActorOut = nullptr;
+
+		auto ActorArray = World->PersistentLevel->Actors;
+
+		if (ActorArray.IsValid()) {
+			for (size_t i = 0; i < ActorArray.Num(); i++)
+			{
+				SDK::AActor* CurrentActor = ActorArray[i];
+
+				if (CurrentActor && CurrentActor->IsA(Class))
+				{
+					ActorOut = CurrentActor;
+					break;
+				}
+			}
+		}
+
+		return ActorOut;
+	}
+
+	std::vector<SDK::AActor*> GetAllActorsOfClass(SDK::UWorld* World, SDK::UClass* Class) {
+		std::vector<SDK::AActor*> Objects;
+
+	    auto ActorArray = World->PersistentLevel->Actors;
+
+		if (ActorArray.IsValid()) {
+			for (size_t i = 0; i < ActorArray.Num(); i++)
+			{
+				SDK::AActor* CurrentActor = ActorArray[i];
+
+				if (CurrentActor && CurrentActor->IsA(Class))
+					Objects.push_back(CurrentActor);
 			}
 		}
 
@@ -936,8 +933,21 @@ namespace Cheat {
 
 
 
+		if (Stages >= defines::Pawn) {
+
+			{
+				if (Settings::Open) {
+					Pawn->DisableInput(PlayerController);
+				}
+				else
+				{
+					Pawn->EnableInput(PlayerController);
+				}
+			}
+		}
 
 		if (Stages >= defines::PlayerController) {
+			
 
 			if (Settings::wtf_) {
 				Settings::wtf_ = false;
@@ -1048,11 +1058,6 @@ namespace Cheat {
 			}
 #endif
 
-			if (Settings::ProtectCamServer && !Settings::IniShitsPlayer[0]) {
-				Settings::IniShitsPlayer[0] = true;
-				PlayerController->PlayerCameraManager->SetReplicates(false);
-			}
-
 			//static ULONGLONG TickCountGameModeCurrent = 0;
 
 			//if (TickCount >= TickCountGameModeCurrent) {
@@ -1122,21 +1127,16 @@ namespace Cheat {
 				PlayerStuff::PlayerList.clear();
 
 
-				SDK::TArray<SDK::AActor*> Players;
-				//SDK::TArray<SDK::AActor*> Characters;
+				auto Players = GetAllActorsOfClass(WorldP, SDK::APlayerState::StaticClass());
 
-
-				GPStatics->GetAllActorsOfClass(WorldP, SDK::APlayerState::StaticClass(), &Players);
-				//GPStatics->GetAllActorsOfClass(WorldP, SDK::ABPCharacter_Demo_C::StaticClass(), &Characters);
-
-				if (Players.IsValid()) {
+				if (Players.size() > 0) {
 					cleared = false;
 
 					auto bpClass = SDK::ABPCharacter_Demo_C::StaticClass();
 					auto AMPGamemodeClass = SDK::AMP_GameMode_C::StaticClass();
 					auto SpectatorPawnClass = SDK::ASpectatorPawn::StaticClass();
 
-					for (size_t i = 0; i < Players.Num(); i++)
+					for (size_t i = 0; i < Players.size(); i++)
 					{
 						auto State = (SDK::APlayerState*)Players[i];
 
@@ -1232,6 +1232,39 @@ namespace Cheat {
 									
 								}
 
+								if (Settings::SpawnRopeAtEventPlayer) {
+									Settings::Event_PlayerID = -1;
+									Settings::SpawnRopeAtEventPlayer = false;
+
+									if (auto Char_ = (SDK::ABPCharacter_Demo_C*)PlayerController->Character; Char_ && Char_->IsA(SDK::ABPCharacter_Demo_C::StaticClass())) {
+
+										auto ItemRep = Char_->CurrentItem_Rep;
+
+										if (ItemRep) {
+											auto rope = (SDK::ABP_Rope_C*)SDK::ABP_Rope_C::GetDefaultObj();
+
+											if (ItemRep->ID == rope->ID) {
+												rope = (SDK::ABP_Rope_C*)ItemRep;
+
+
+												rope->SRV_TossRope((SDK::ABP_Rope_Floor_C*)Owner_, Owner_->K2_GetActorLocation() + Owner_->GetActorForwardVector() * 2 );
+												rope->SRV_ShowRope(Owner_, Owner_->K2_GetActorLocation() + Owner_->GetActorForwardVector() * 2);
+											}
+										}
+									}
+								}
+
+								if (Settings::SpectateEventPlayer) {
+									Settings::Event_PlayerID = -1;
+									Settings::SpectateEventPlayer = false;
+
+									if (Settings::Freecam) {
+										if (Settings::IniShitsPlayer[Settings::PIsFreeCam]) {
+											PlayerController->K2_GetPawn()->K2_SetActorLocation(Owner_->K2_GetActorLocation(), false, 0, true);
+									    }
+									}
+								}
+
 								if (Settings::UseItemEventPlayer) {
 									Settings::Event_PlayerID = -1;
 									Settings::UseItemEventPlayer = false;
@@ -1251,6 +1284,20 @@ namespace Cheat {
 									else
 									{
 										Message("Character is nullptr");
+									}
+								}
+
+
+								if (Settings::StealPawnEventPlayer) {
+									Settings::StealPawnEventPlayer = false;
+									Settings::Event_PlayerID = -1;
+
+									if (Character_) {
+										auto char_ = (SDK::ABPCharacter_Demo_C*)(PlayerController->Character ? (PlayerController->Character->IsA(bpClass) ? PlayerController->Character : nullptr) : nullptr);
+
+										if (char_) {
+											char_->StartPushingActor_SERVER((SDK::ABP_Pushable_C*)Character_, Pawn->K2_GetActorLocation(), Pawn->GetControlRotation());
+										}
 									}
 								}
 
@@ -1310,6 +1357,7 @@ namespace Cheat {
 						return a.PlayerID < b.PlayerID;
 						});
 				}
+
 			}
 			else
 			{
@@ -1364,11 +1412,10 @@ namespace Cheat {
 
 				if (BoatClass) {
 
-					SDK::TArray<SDK::AActor*> BoatPawns;
-					GPStatics->GetAllActorsOfClass(WorldP, BoatClass, &BoatPawns);
+					auto BoatPawns = GetAllActorsOfClass(WorldP, BoatClass);
 
-					if (BoatPawns.IsValid()) {
-						for (size_t i = 0; i < BoatPawns.Num(); i++)
+					if (BoatPawns.size() > 0) {
+						for (size_t i = 0; i < BoatPawns.size(); i++)
 						{
 							auto BoatPawn = (SDK::ABP_RowBoat_C*)BoatPawns[i];
 
@@ -1387,6 +1434,7 @@ namespace Cheat {
 
 								//BoatPawn->LaunchPawn(SDK::FVector(0, 0, 200.5f), false, false);
 								if (Settings::BoatFly) {
+									auto DeltaTime = GPStatics->GetWorldDeltaSeconds(WorldP);
 
 									BoatPawn->RootComponent->ComponentVelocity = { 0.0f, 0.0f, 0.0f };
 									BoatPawn->SceneComponent->ComponentVelocity = { 0.0f, 0.0f, 0.0f };
@@ -1394,7 +1442,7 @@ namespace Cheat {
 
 									Settings::IniShitsLevel[5] = true;
 
-									if (GetAsyncKeyState(VK_LEFT)) {
+									if (UsefullFuncs::IsKeyPressed(VK_LEFT)) {
 										SDK::FRotator rotation = BoatPawn->K2_GetActorRotation();
 
 										if (rotation.Yaw - 5.0f < -360.0f) {
@@ -1409,7 +1457,7 @@ namespace Cheat {
 										BoatPawn->K2_SetActorRotation(rotation, false);
 									}
 
-									if (GetAsyncKeyState(VK_RIGHT)) {
+									if (UsefullFuncs::IsKeyPressed(VK_RIGHT)) {
 										SDK::FRotator rotation = BoatPawn->K2_GetActorRotation();
 
 										if (rotation.Yaw + 5.0f > 360.0f) {
@@ -1424,13 +1472,13 @@ namespace Cheat {
 										BoatPawn->K2_SetActorRotation(rotation, false);
 									}
 
-									if (GetAsyncKeyState(VK_SPACE)) {
+									if (UsefullFuncs::IsKeyPressed(VK_SPACE)) {
 
 										auto BoatLoc = BoatPawn->K2_GetActorLocation();
 
 										auto Cam = PlayerController->PlayerCameraManager;
 
-										SDK::FVector ForwardCam = Cam->GetActorUpVector() * Settings::PlayerFlySpeedY;
+										SDK::FVector ForwardCam = (Cam->GetActorUpVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 										SDK::FVector PositionOut = { BoatLoc.X + ForwardCam.X, BoatLoc.Y + ForwardCam.Y, BoatLoc.Z };
 
@@ -1440,13 +1488,13 @@ namespace Cheat {
 
 									}
 
-									if (GetAsyncKeyState(VK_SHIFT)) {
+									if (UsefullFuncs::IsKeyPressed(VK_SHIFT)) {
 
 										auto BoatLoc = BoatPawn->K2_GetActorLocation();
 
 										auto Cam = PlayerController->PlayerCameraManager;
 
-										SDK::FVector ForwardCam = Cam->GetActorUpVector() * Settings::PlayerFlySpeedY;
+										SDK::FVector ForwardCam = (Cam->GetActorUpVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 										SDK::FVector PositionOut = { BoatLoc.X + ForwardCam.X, BoatLoc.Y + ForwardCam.Y, BoatLoc.Z};
 
@@ -1456,12 +1504,12 @@ namespace Cheat {
 
 									}
 
-									if (GetAsyncKeyState('W')) {
+									if (UsefullFuncs::IsKeyPressed('W')) {
 										auto BoatLoc = BoatPawn->K2_GetActorLocation();
 
 										auto Cam = PlayerController->PlayerCameraManager;
 
-										SDK::FVector ForwardCam = Cam->GetActorForwardVector() * Settings::PlayerFlySpeedY;
+										SDK::FVector ForwardCam = (Cam->GetActorForwardVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 										SDK::FVector PositionOut = { BoatLoc.X + ForwardCam.X, BoatLoc.Y + ForwardCam.Y, BoatLoc.Z };
 
@@ -1469,24 +1517,24 @@ namespace Cheat {
 									}
 
 
-									if (GetAsyncKeyState('S')) {
+									if (UsefullFuncs::IsKeyPressed('S')) {
 										auto BoatLoc = BoatPawn->K2_GetActorLocation();
 
 										auto Cam = PlayerController->PlayerCameraManager;
 
-										SDK::FVector ForwardCam = Cam->GetActorForwardVector() * Settings::PlayerFlySpeedY;
+										SDK::FVector ForwardCam = (Cam->GetActorForwardVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 										SDK::FVector PositionOut = { BoatLoc.X - ForwardCam.X, BoatLoc.Y - ForwardCam.Y, BoatLoc.Z};
 
 										BoatPawn->K2_SetActorLocation(PositionOut, false, 0, true);
 									}
 
-									if (GetAsyncKeyState('A')) {
+									if (UsefullFuncs::IsKeyPressed('A')) {
 										auto BoatLoc = BoatPawn->K2_GetActorLocation();
 
 										auto Cam = PlayerController->PlayerCameraManager;
 
-										SDK::FVector ForwardCam = Cam->GetActorRightVector() * Settings::PlayerFlySpeedY;
+										SDK::FVector ForwardCam = (Cam->GetActorRightVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 										SDK::FVector PositionOut = { BoatLoc.X - ForwardCam.X, BoatLoc.Y - ForwardCam.Y, BoatLoc.Z};
 
@@ -1495,12 +1543,12 @@ namespace Cheat {
 
 
 
-									if (GetAsyncKeyState('D')) {
+									if (UsefullFuncs::IsKeyPressed('D')) {
 										auto BoatLoc = BoatPawn->K2_GetActorLocation();
 
 										auto Cam = PlayerController->PlayerCameraManager;
 
-										SDK::FVector ForwardCam = Cam->GetActorRightVector() * Settings::PlayerFlySpeedY;
+										SDK::FVector ForwardCam = ( Cam->GetActorRightVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 										SDK::FVector PositionOut = { BoatLoc.X + ForwardCam.X, BoatLoc.Y + ForwardCam.Y, BoatLoc.Z};
 
@@ -1541,11 +1589,10 @@ namespace Cheat {
 					if (auto BoatClass = SDK::ABP_RowBoat_C::StaticClass(); BoatClass)
 					{
 
-						SDK::TArray<SDK::AActor*> BoatPawns;
-						GPStatics->GetAllActorsOfClass(WorldP, BoatClass, &BoatPawns);
+						auto BoatPawns = GetAllActorsOfClass(WorldP, BoatClass);
 
-						if (BoatPawns.IsValid()) {
-							for (size_t i = 0; i < BoatPawns.Num(); i++)
+						if (BoatPawns.size() > 0) {
+							for (size_t i = 0; i < BoatPawns.size(); i++)
 							{
 								auto BoatPawn = (SDK::ABP_RowBoat_C*)BoatPawns[i];
 
@@ -1563,6 +1610,29 @@ namespace Cheat {
 			auto BPCharacter = (SDK::ABPCharacter_Demo_C*)PlayerController->Character;
 
 			if (BPCharacter) {
+
+				if (Settings::ProtectCamServer && !Settings::IniShitsPlayer[0]) {
+					Settings::IniShitsPlayer[0] = true;
+					BPCharacter->CameraComponent->SetIsReplicated(false);
+				}
+
+#ifdef DEBUG
+				{ // Dont wanna pollute the main codeblock with static value, so own codeblock
+
+					static SDK::FGuid MapPackageGuidCurrent = { 0,0,0,0 }; //use guid for whatever the fuck
+
+					if (Settings::RejoinServer_Event) {
+						Settings::RejoinServer_Event = false;
+
+						MapPackageGuidCurrent = { 0,0,0,0 };
+						PlayerController->ClientTravelInternal(SDK::FString(Backend::HostID.c_str()), SDK::ETravelType::TRAVEL_Absolute, true, MapPackageGuidCurrent);
+					}
+				}
+#endif
+
+				/*
+				BPCharacter->Bob_Buoyancy_C74565444B6ED2300150BBA0C909B04A = 100.0f;
+				BPCharacter->OC_UpdateBuoyancy();*/
 
 				if (Settings::OwnSelf) {
 					Settings::OwnSelf = false;
@@ -1597,40 +1667,117 @@ namespace Cheat {
 				}
 
 
-#ifdef DEBUG
-
 				//Spawn stuff inside your hand, that wasnt supposed to even Spawn in there (Exploit 1, Dangerous Exploit)
-				if (Settings::Spawner) {
-					if (GetAsyncKeyState('T') & 1)
-					{
-						SDK::UClass* SpawningThing = SDK::ABacteria_BP_C::StaticClass();
-
-						if (SpawningThing)
-							BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
-					}
-
+				if (Settings::Spawner_) {
 					static ULONGLONG TickFindBoat = 0;
 
-					if (GetAsyncKeyState('U') & 1)
-					{
+					if (Settings::SpawnerEvent) {
+						Settings::SpawnerEvent = false;
+
 						SDK::UClass* SpawningThing = nullptr;
+						
+						switch (Settings::SpawnerValue)
+						{
+						case Settings::Spawner::Spawner_Stuff::None:
+							break;
 
-					    SpawningThing = SDK::ABP_RowBoat_C::StaticClass();
+						case Settings::Spawner::Spawner_Stuff::Boat:
+							SpawningThing = SDK::ABP_RowBoat_C::StaticClass();
 
-						if (SpawningThing)
-						    BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+							if (SpawningThing) {
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
 
-						Settings::IniShitsPlayer[5] = true;
-						TickFindBoat = TickCount + 100;
+								Settings::IniShitsPlayer[5] = true;
+								TickFindBoat = TickCount + 100;
+							}
+							break;
+
+						case Settings::Spawner::Spawner_Stuff::Rope:
+							SpawningThing = SDK::ABP_Rope_C::StaticClass();
+
+							if (Functions::ShouldUsePointer64(SpawningThing)) {
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+							}
+							else
+							{
+								Message("Couldnt Spawn Rope. Class Not Found");
+							}
+							break;
+
+
+						case Settings::Spawner::Spawner_Stuff::BactiriaMonster:
+							SpawningThing = SDK::ABacteria_BP_C::StaticClass();
+
+							if (SpawningThing)
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+
+							break;
+
+
+						case Settings::Spawner::Spawner_Stuff::ExitZone:
+							SpawningThing = SDK::ABP_ExitZone_C::StaticClass();
+
+							if (Functions::ShouldUsePointer64(SpawningThing)) {
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+							}
+							else
+							{
+								Message("Couldnt Spawn ExitZone. Class Not Found");
+							}
+							break;
+
+
+						case Settings::Spawner::Spawner_Stuff::FireworkProj_Bugged:
+							SpawningThing = SDK::ABP_FireworkProjectile_C::StaticClass();
+
+							if (Functions::ShouldUsePointer64(SpawningThing)) {
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+								Settings::IniShitsPlayer[3] = true;
+								Settings::IniShitsPlayer[4] = true;
+
+							}
+							else
+							{
+								Message("Couldnt Spawn Firework. Class Not Found");
+							}
+							break;
+
+						case Settings::Spawner::Spawner_Stuff::Firework:
+							SpawningThing = SDK::ABP_Item_Firework_C::StaticClass();
+
+							if (Functions::ShouldUsePointer64(SpawningThing)) {
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+							}
+							else
+							{
+								Message("Couldnt Spawn Firework. Class Not Found");
+							}
+							break;
+
+#ifdef DEBUG
+						case Settings::Spawner::Spawner_Stuff::ExitZoneEndGame:
+							SpawningThing = SDK::UObject::FindClassFast(Settings::SpawningValue);
+
+							if (Functions::ShouldUsePointer64(SpawningThing)) {
+								BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
+							}
+							else
+							{
+								Message("Couldnt Spawn ExitZoneEndGame. Class Not Found");
+							}
+							break;
+
+#endif // DEBUG
+						}
 					}
+
 
 					if (Settings::IniShitsPlayer[5] && TickCount >= TickFindBoat) {
 						TickFindBoat = TickCount + 100;
 
-						SDK::TArray<SDK::AActor*> Boats_2;
-						GPStatics->GetAllActorsOfClass(WorldP, SDK::ABoatPawn::StaticClass(), &Boats_2);
+						auto Boats_2 = GetAllActorsOfClass(WorldP, SDK::ABoatPawn::StaticClass());
 
-						int Numb = Boats_2.Num();
+						int Numb = Boats_2.size();
 
 						for (size_t i = 0; i < Numb; i++)
 						{
@@ -1649,86 +1796,7 @@ namespace Cheat {
 						}
 					}
 
-					//if (GetAsyncKeyState('O') & 1)
-					//{
-					//	//BPCharacter->CrouchAmount = -1000.0f;
-					//	//BPCharacter->Crouch(false);
-
-					//	SDK::UClass* SpawningThing = SDK::::StaticClass();
-
-					//	
-
-					//	if (SpawningThing) {
-					//		auto Object = (SDK::ABP_DroppedItem_Glowstick_C*)SpawningThing->DefaultObject;
-
-					//		if (!Object) {
-					//			Message("Default Object is null!");
-					//		}
-
-
-					//		BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
-
-					//	}
-					//	else
-					//	{
-					//		Message("Class is null!");
-					//	}
-
-					//	//BPCharacter->CustomTimeDilation = 0.001f;
-					//}
-
-					//Send people into the MainMenu by spawning an DefaultExitZone with no Parameters. No fallback from host, host has to restart game (Exploit 2, very severe, any level can be loaded with the right class)
-					if (GetAsyncKeyState('R') & 1)
-					{
-						//BPCharacter->CrouchAmount = -1000.0f;
-						//BPCharacter->Crouch(false);
-						SDK::UClass* SpawningThing = SDK::ABP_ExitZone_C::StaticClass();
-
-						if (Functions::ShouldUsePointer64(SpawningThing)) {
-							BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
-						}
-						else
-						{
-							Message("Couldnt Spawn ExitZone. Class Not Found");
-						}
-						//BPCharacter->CustomTimeDilation = 0.001f;
-					}
-
-					if (GetAsyncKeyState('7') & 1)
-					{
-						//BPCharacter->CrouchAmount = -1000.0f;
-						//BPCharacter->Crouch(false);
-						SDK::UClass* SpawningThing = SDK::ABP_Rope_C::StaticClass();
-
-						if (Functions::ShouldUsePointer64(SpawningThing)) {
-							BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
-						}
-						else
-						{
-							Message("Couldnt Spawn Rope. Class Not Found");
-						}
-						//BPCharacter->CustomTimeDilation = 0.001f;
-					}
-
-					if (GetAsyncKeyState('8') & 1)
-					{
-						//BPCharacter->CrouchAmount = -1000.0f;
-						//BPCharacter->Crouch(false);
-						SDK::UClass* SpawningThing = SDK::ABP_FireworkProjectile_C::StaticClass();
-
-						if (Functions::ShouldUsePointer64(SpawningThing)) {
-							BPCharacter->SpawnEquipItem_SERVER(SpawningThing);
-							Settings::IniShitsPlayer[3] = true;
-							Settings::IniShitsPlayer[4] = true;
-							
-						}
-						else
-						{
-							Message("Couldnt Spawn Firework. Class Not Found");
-						}
-						//BPCharacter->CustomTimeDilation = 0.001f;
-					}
-
+				
 
 
 					if (Settings::IniShitsPlayer[3] && BPCharacter->CurrentItem_Rep) {
@@ -1752,24 +1820,6 @@ namespace Cheat {
 						BPCharacter->CurrentItem_Rep->K2_SetActorLocation(PlayerController->PlayerCameraManager->GetCameraLocation() + (PlayerController->PlayerCameraManager->GetActorForwardVector() * 2), false, 0, true);
 					}
 				}
-				else
-				{
-					static LONGLONG UpdateStatesTick = 0;
-
-					if (TickCount >= UpdateStatesTick) {
-						UpdateStatesTick = TickCount + 10;
-						GetAsyncKeyState('T');
-						GetAsyncKeyState('U');
-						GetAsyncKeyState('O');
-						GetAsyncKeyState('R');
-						GetAsyncKeyState('7');
-						GetAsyncKeyState('8');
-						GetAsyncKeyState('9');
-					}
-					
-				}
-
-#endif
 
 
 				static SDK::FVector LastPos;
@@ -1789,7 +1839,7 @@ namespace Cheat {
 				}
 
 				//FreeCam kinda
-				if (GetAsyncKeyState('J') & 1)
+				if (Settings::Freecam && UsefullFuncs::IsKeyPressed('J', true))
 				{
 					//PlayerController->ServerPause();
 					//PlayerController->ClientReset();
@@ -1829,7 +1879,7 @@ namespace Cheat {
 				//SDK::UWB_Chat_C
 
 				//Become an Omega ultra sigma and live inside your own edit, while floating elegantly through the air 
-				if (GetAsyncKeyState(VK_RSHIFT)) {
+				if (UsefullFuncs::IsKeyPressed(VK_RSHIFT)) {
 					BPCharacter->CustomTimeDilation = 0.02f;
 				}
 				else
@@ -1846,12 +1896,12 @@ namespace Cheat {
 				}
 
 
-				//if (GetAsyncKeyState('P')) {
+				//if (UsefullFuncs::IsKeyPressed('P')) {
 				//	BPCharacter->PickUp_SERVER((SDK::ADroppedItem*)BPCharacter);
 				//	//Settings::ForceAdmin = true
 				//}
 
-				if (GetAsyncKeyState('Z')) {
+				if (UsefullFuncs::IsKeyPressed('Z')) {
 					Settings::TpEveryone = true;
 				}
 
@@ -1878,11 +1928,6 @@ namespace Cheat {
 				//}
 
 				//BPCharacter->SetCanCollide(false);
-
-				
-
-
-
 
 
 
@@ -1996,10 +2041,156 @@ namespace Cheat {
 						
 					}
 
-#ifdef DEBUG
+#ifdef DEBUG //Load Chams, not working yet! working on it tho
+
+					if (UsefullFuncs::IsKeyPressed(VK_F6, true))
+					{
+						auto Materials = FindInstances(SDK::UObject::StaticClass());
+						bool isMounted = false;
+
+
+						for (size_t i = 0; i < Materials.size(); i++)
+						{
+							if (Materials[i]->GetName().find("Chams_") != std::string::npos) {
+								isMounted = true;
+								Message(std::format("Found something!: {}", Materials[i]->GetFullName()), FOREGROUND_GREEN);
+
+								auto Outer = Materials[i]->Outer;
+
+								while (Outer)
+								{
+									Message(std::format("Outer {}!: {}",i, Outer->GetFullName()), FOREGROUND_GREEN);
+									Outer = Outer->Outer;
+								}
+
+
+
+								// Correct path to the material without the .uasset extension
+								const wchar_t* AssetName = L"/Game/Materials/Chams_.Chams_";  // Name of the asset
+
+								// Load the material using StaticLoadObject_Internal
+								SDK::UObject* OutObject = StaticLoadObject_Internal(
+									SDK::UObject::StaticClass(),  // Class
+									nullptr,                        // InOuter_Optional
+									AssetName,                      // NameOfObject
+									nullptr,                      // FileName_Optional
+									0,                              // LoadFlags
+									nullptr,                        // Sandbox_Needed
+									true,                           // AllowObjectReconciliation
+									nullptr                         // InstancingContext
+								);
+
+								if (OutObject)
+									Cheat::Message("Loaded Chams Material!");
+								else
+									Cheat::Message("Couldn't Loaded Chams Material!");
+							}
+						}
+
+						if (!isMounted) {
+
+
+							Cheat::FPlatformFileManager* FileManager = Cheat::FPlatformFileManager$$Get();
+
+							if (FileManager) {
+
+
+
+								void* PlatformFile = Cheat::FPakPlatformFile$$FindPlatformFile(FileManager, L"PakFile");
+
+								if (PlatformFile) {
+
+
+
+
+									if (Cheat::FPakPlatformFile$$Mount(PlatformFile, LR"(R:/SteamLibrary/steamapps/common/EscapeTheBackrooms/EscapeTheBackrooms/Content/Paks/TestAsset.pak)", 0, L"/fortnig/Content/Materials", true)) {
+										isMounted = true;
+
+										// Correct path to the material without the .uasset extension
+										const wchar_t* AssetName = L"/fortnig/Content/Game/Materials/Chams_.Chams_";  // Name of the asset
+
+										// Load the material using StaticLoadObject_Internal
+										SDK::UObject* OutObject = StaticLoadObject_Internal(
+											SDK::UObject::StaticClass(),  // Class
+											nullptr,                        // InOuter_Optional
+											AssetName,                      // NameOfObject
+											nullptr,                      // FileName_Optional
+											0,                              // LoadFlags
+											nullptr,                        // Sandbox_Needed
+											true,                           // AllowObjectReconciliation
+											nullptr                         // InstancingContext
+										);
+
+										if (OutObject)
+											Cheat::Message("Loaded Chams Material!");
+										else
+											Cheat::Message("Couldn't Loaded Chams Material!");
+
+
+										Materials = FindInstances(SDK::UObject::StaticClass());
+
+
+										for (size_t i = 0; i < Materials.size(); i++)
+										{
+											if (Materials[i]->GetName().find("Chams_") != std::string::npos) {
+												Message(std::format("Found something!: {}", Materials[i]->GetFullName()), FOREGROUND_GREEN);
+
+												auto Outer = Materials[i]->Outer;
+
+												while (Outer)
+												{
+													Message(std::format("Outer {}!: {}", i, Outer->GetFullName()), FOREGROUND_GREEN);
+													Outer = Outer->Outer;
+												}
+
+
+
+												// Correct path to the material without the .uasset extension
+												const wchar_t* AssetName = L"/fortnig/Content/Game/Materials/Chams_.Chams_";  // Name of the asset
+
+												// Load the material using StaticLoadObject_Internal
+												SDK::UObject* OutObject = StaticLoadObject_Internal(
+													SDK::UObject::StaticClass(),  // Class
+													nullptr,                        // InOuter_Optional
+													AssetName,                      // NameOfObject
+													nullptr,                      // FileName_Optional
+													0,                              // LoadFlags
+													nullptr,                        // Sandbox_Needed
+													true,                           // AllowObjectReconciliation
+													nullptr                         // InstancingContext
+												);
+
+												if (OutObject)
+													Cheat::Message("Loaded Chams Material!");
+												else
+													Cheat::Message("Couldn't Loaded Chams Material!");
+
+												break;
+											}
+										}
+									}
+									else
+									{
+										Message("Failed to Mount PakFile");
+									}
+
+								}
+								else
+								{
+									Message("PakPlatformFile was nullptr");
+								}
+							}
+							else
+							{
+								Message("FileManager was nullptr");
+							}
+						}
+						
+					}
+#endif 
 
 					//Spawn ropes anywhere you want, how often you want also. (Exploit 3, severe)
-					if (GetAsyncKeyState(VK_F2)& 1 && BPCharacter->CurrentItem_Rep) {
+					if (UsefullFuncs::IsKeyPressed(VK_F2)& 1 && BPCharacter->CurrentItem_Rep) {
 						auto rope = (SDK::ABP_Rope_C*)SDK::ABP_Rope_C::GetDefaultObj();
 						if (BPCharacter->CurrentItem_Rep->ID == rope->ID) {
 							rope = (SDK::ABP_Rope_C*)BPCharacter->CurrentItem_Rep;
@@ -2010,10 +2201,10 @@ namespace Cheat {
 						}
 					}
 
-#endif // No real Frontend implementation for this, for now
 
 
-					if (GetAsyncKeyState(VK_F3) & 1)
+
+					if (UsefullFuncs::IsKeyPressed(VK_F3, true))
 					{
 						Settings::IniShitsPlayer[6] = !Settings::IniShitsPlayer[6];
 					}
@@ -2036,7 +2227,7 @@ namespace Cheat {
 					
 
 
-					//if (GetAsyncKeyState(VK_F3) & 1 && BPCharacter->CurrentItem_Rep) { // actual safe item
+					//if (UsefullFuncs::IsKeyPressed(VK_F3) & 1 && BPCharacter->CurrentItem_Rep) { // actual safe item
 
 					//	auto rope = (SDK::ABP_Scanner_C*)SDK::ABP_Scanner_C::GetDefaultObj();
 					//	if (BPCharacter->CurrentItem_Rep->ID == rope->ID) {
@@ -2220,7 +2411,7 @@ namespace Cheat {
 							for (size_t i = 0; i < 300; i++)
 							{
 								BPCharacter->DropItem_SERVER(ItemClass->ID);
-								auto DeleteAbleClass = (SDK::ABP_DroppedItem_C*)GPStatics->GetActorOfClass(WorldP, SDK::ABP_DroppedItem_C::StaticClass());
+								auto DeleteAbleClass = (SDK::ABP_DroppedItem_C*)GetActorOfClass(WorldP, SDK::ABP_DroppedItem_C::StaticClass());
 								if (DeleteAbleClass) {
 									DeleteAbleClass->K2_DestroyActor();
 								}
@@ -2234,12 +2425,12 @@ namespace Cheat {
 
 
 					if (Settings::ClearItems) {
-						SDK::TArray<SDK::AActor*> Items;
-						GPStatics->GetAllActorsOfClass(WorldP, SDK::ABP_DroppedItem_C::StaticClass(), &Items);
+						auto Items = GetAllActorsOfClass(WorldP, SDK::ABP_DroppedItem_C::StaticClass());
 
-						if (Items.IsValid()) {
+						if (Items.size() > 0) {
+
 							Settings::ClearItems = false;
-							for (size_t i = 0; i < Items.Num(); i++)
+							for (size_t i = 0; i < Items.size(); i++)
 							{
 								if (!Items[i])continue;
 
@@ -2255,22 +2446,7 @@ namespace Cheat {
 					if (Settings::UnpossePawns) {
 						Settings::UnpossePawns = false;
 
-						SDK::TArray<SDK::AActor*> Pawns;
-						GPStatics->GetAllActorsOfClass(WorldP, SDK::AActor::StaticClass(), &Pawns);
-
-						if (Pawns.IsValid()) {
-							for (size_t i = 0; i < Pawns.Num(); i++)
-							{
-								auto pawn = Pawns[i];
-
-								//BPCharacter->PickUp_SERVER((SDK::ADroppedItem*)Pawns[i]);
-									//BPCharacter->StartPushingActor_SERVER((SDK::ABP_Pushable_C*)Pawns[i], Pawns[i]->K2_GetActorLocation(), PlayerController->ControlRotation);
-									//BPCharacter->StopPushingActor_SERVER((SDK::ABP_Pushable_C*)Pawns[i]);
-
-
-							}
-						}
-
+						
 
 					}
 #endif
@@ -2332,7 +2508,7 @@ namespace Cheat {
 
 
 					if (Settings::VelocityFly) {
-						if (GetAsyncKeyState(VK_SPACE)) {
+						if (UsefullFuncs::IsKeyPressed(VK_SPACE)) {
 							BPCharacter->SRV_Launch(Settings::PlayerFlySpeedY); BPCharacter->LaunchPawn(SDK::FVector(0, 0, Settings::PlayerFlySpeedY), false, true);
 						}
 
@@ -2341,74 +2517,87 @@ namespace Cheat {
 					{
 						WasFlying = true;
 						BPCharacter->CharacterMovement->MovementMode = SDK::EMovementMode::MOVE_None;
+						auto DeltaTime = GPStatics->GetWorldDeltaSeconds(WorldP);
 
-						if (GetAsyncKeyState('W')) {
+						if (UsefullFuncs::IsKeyPressed('W')) {
 							auto Cam = PlayerController->PlayerCameraManager;
 
-							SDK::FVector ForwardCam = Cam->GetActorForwardVector() * Settings::PlayerFlySpeedY;
+							SDK::FVector ForwardCam = (Cam->GetActorForwardVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 							auto PlayerPos = PlayerController->AcknowledgedPawn->K2_GetActorLocation();
 
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X + ForwardCam.X, PlayerPos.Y + ForwardCam.Y, PlayerPos.Z + ForwardCam.Z), false, 0, true);
 						}
 
-						if (GetAsyncKeyState('S')) {
+						if (UsefullFuncs::IsKeyPressed('S')) {
 							auto Cam = PlayerController->PlayerCameraManager;
 
-							SDK::FVector ForwardCam = Cam->GetActorForwardVector() * Settings::PlayerFlySpeedY;
+							SDK::FVector ForwardCam = (Cam->GetActorForwardVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 							auto PlayerPos = PlayerController->AcknowledgedPawn->K2_GetActorLocation();
 
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X - ForwardCam.X, PlayerPos.Y - ForwardCam.Y, PlayerPos.Z - ForwardCam.Z), false, 0, true);
 						}
 
-						if (GetAsyncKeyState('A')) {
+						if (UsefullFuncs::IsKeyPressed('A')) {
 							auto Cam = PlayerController->PlayerCameraManager;
 
-							SDK::FVector RightVector = Cam->GetActorRightVector() * Settings::PlayerFlySpeedY;
+							SDK::FVector RightVector = (Cam->GetActorRightVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 							auto PlayerPos = PlayerController->AcknowledgedPawn->K2_GetActorLocation();
 
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X - RightVector.X, PlayerPos.Y - RightVector.Y, PlayerPos.Z - RightVector.Z), false, 0, true);
 						}
 
-						if (GetAsyncKeyState('D')) {
+						if (UsefullFuncs::IsKeyPressed('D')) {
 							auto Cam = PlayerController->PlayerCameraManager;
 
-							SDK::FVector RightVector = Cam->GetActorRightVector() * Settings::PlayerFlySpeedY;
+							SDK::FVector RightVector = (Cam->GetActorRightVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 							auto PlayerPos = PlayerController->AcknowledgedPawn->K2_GetActorLocation();
 
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X + RightVector.X, PlayerPos.Y + RightVector.Y, PlayerPos.Z + RightVector.Z), false, 0, true);
 						}
 
-						if (GetAsyncKeyState(VK_SPACE)) {
+						if (UsefullFuncs::IsKeyPressed(VK_SPACE)) {
 							auto Cam = PlayerController->PlayerCameraManager;
 
-							SDK::FVector UPVector = Cam->GetActorUpVector() * Settings::PlayerFlySpeedY;
+							SDK::FVector UPVector = (Cam->GetActorUpVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 							auto PlayerPos = PlayerController->AcknowledgedPawn->K2_GetActorLocation();
 
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X + UPVector.X, PlayerPos.Y + UPVector.Y, PlayerPos.Z + UPVector.Z), false, 0, true);
 						}
 
-						if (GetAsyncKeyState(VK_SHIFT)) {
+						if (UsefullFuncs::IsKeyPressed(VK_SHIFT)) {
 							auto Cam = PlayerController->PlayerCameraManager;
 
-							SDK::FVector UPVector = Cam->GetActorUpVector() * Settings::PlayerFlySpeedY;
+							SDK::FVector UPVector = (Cam->GetActorUpVector() * DeltaTime * 100) * Settings::PlayerFlySpeedY;
 
 							auto PlayerPos = PlayerController->AcknowledgedPawn->K2_GetActorLocation();
 
 							PlayerController->AcknowledgedPawn->K2_SetActorLocation(SDK::FVector(PlayerPos.X - UPVector.X, PlayerPos.Y - UPVector.Y, PlayerPos.Z - UPVector.Z), false, 0, true);
 						}
 
-#ifdef DEBUG //no real frontend for this yet
-						if (GetAsyncKeyState(VK_F1)) {
-							BPCharacter->StartPushingActor_SERVER((SDK::ABP_Pushable_C*)PlayerController->AcknowledgedPawn, PlayerController->AcknowledgedPawn->K2_GetActorLocation(), PlayerController->ControlRotation);
-							BPCharacter->StopPushingActor_SERVER((SDK::ABP_Pushable_C*)PlayerController->AcknowledgedPawn);
+						if (Settings::Freecam && UsefullFuncs::IsKeyPressed(VK_F1)) {
+							BPCharacter->StartPushingActor_SERVER((SDK::ABP_Pushable_C*)nullptr, PlayerController->AcknowledgedPawn->K2_GetActorLocation(), PlayerController->ControlRotation);
+							BPCharacter->StopPushingActor_SERVER((SDK::ABP_Pushable_C*)nullptr);
 						}
-#endif
 
+#ifdef DEBUG
+						static bool LoopTP = false;
+
+						if(UsefullFuncs::IsKeyPressed(VK_F5, true)) {
+							LoopTP = !LoopTP;
+						}
+
+
+						if (Settings::Freecam && LoopTP) {
+							BPCharacter->StartPushingActor_SERVER((SDK::ABP_Pushable_C*)nullptr, PlayerController->AcknowledgedPawn->K2_GetActorLocation(), PlayerController->ControlRotation);
+							BPCharacter->StopPushingActor_SERVER((SDK::ABP_Pushable_C*)nullptr);
+						}
+
+#endif // DEBUG
 					}
 
 				}
@@ -2477,17 +2666,16 @@ namespace Cheat {
 
 
 			//if (true) { //Esp Start
-			SDK::TArray<SDK::AActor*> EnemyArray;
-
+		
 
 			if (Settings::InteractablesEsp || Settings::InteractAll || Settings::InteractEvent || Settings::BringAllItems) {
 
-				GPStatics->GetAllActorsOfClass(Engine->GameViewport->World, SDK::AInteractableActor::StaticClass(), &EnemyArray);
+				auto EnemyArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::AInteractableActor::StaticClass());
 
-				if (EnemyArray.IsValid())
-					for (size_t i = 0; i < EnemyArray.Num(); i++)
+				if (EnemyArray.size() > 0)
+					for (size_t i = 0; i < EnemyArray.size(); i++)
 					{
-						if (!EnemyArray.IsValidIndex(i) || !EnemyArray[i])continue;
+						if (!EnemyArray[i])continue;
 
 
 						auto CurrentInteractable = (SDK::AInteractableActor*)EnemyArray[i];
@@ -2531,12 +2719,12 @@ namespace Cheat {
 						}
 					}
 
-				GPStatics->GetAllActorsOfClass(Engine->GameViewport->World, SDK::AInteractablePawn::StaticClass(), &EnemyArray);
+			    EnemyArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::AInteractablePawn::StaticClass());
 
-				if (EnemyArray.IsValid()) {
-					for (size_t i = 0; i < EnemyArray.Num(); i++)
+				if (EnemyArray.size() > 0) {
+					for (size_t i = 0; i < EnemyArray.size(); i++)
 					{
-						if (!EnemyArray.IsValidIndex(i) || !EnemyArray[i])continue;
+						if (!EnemyArray[i])continue;
 
 
 						auto CurrentInteractable = (SDK::AInteractablePawn*)EnemyArray[i];
@@ -2574,9 +2762,8 @@ namespace Cheat {
 
 
 
-			if (EnemyArray.IsValid() && Settings::PeacefullMode || Settings::PlayerEsp || Settings::RandomName || Settings::Godmode || Settings::EnemyEsp || Settings::ForceAdmin || Settings::TpEveryone) {
-
-				GPStatics->GetAllActorsOfClass(Engine->GameViewport->World, SDK::ACharacter::StaticClass(), &EnemyArray);
+			if (Settings::PeacefullMode || Settings::PlayerEsp || Settings::RandomName || Settings::Godmode || Settings::EnemyEsp || Settings::ForceAdmin || Settings::TpEveryone) {
+				auto EnemyArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::ACharacter::StaticClass());
 
 				SDK::UClass* StaticSkinMf = nullptr;
 				SDK::UClass* StaticBacteriaMf = nullptr;
@@ -2592,11 +2779,9 @@ namespace Cheat {
 				if (Settings::RandomName)
 					srand(time(NULL));
 
-
-
-				for (size_t i = 0; i < EnemyArray.Num(); i++)
+				for (size_t i = 0; i < EnemyArray.size(); i++)
 				{
-					if (!EnemyArray.IsValidIndex(i) || !EnemyArray[i] || EnemyArray[i] == PlayerController->Character)continue;
+					if (!EnemyArray[i] || EnemyArray[i] == PlayerController->Character)continue;
 
 					auto CurrentEnemy = (SDK::ACharacter*)EnemyArray[i];
 
@@ -2606,29 +2791,6 @@ namespace Cheat {
 						auto StateBP = (SDK::AMP_PS_C*)CharacterBP->PlayerState;
 
 						if (CharacterBP) {
-#ifdef Gatekeep
-
-							if (Settings::ForceAdmin)
-							{
-								//BPCharacter->PickUp_SERVER((SDK::ADroppedItem*)CharacterBP);
-								//StateBP->SRV_AddSanity(-100.0f);
-								//CharacterBP->ShockedServer();
-								if (BPCharacter->GetOwner() == StateBP)
-									PlayerController->ServerAcknowledgePossession(CharacterBP);
-
-								//CharacterBP->ShockedClient();
-							}
-
-
-							/*if (Settings::RandomName && StateBP) {
-
-								auto numb = rand() % 50 + 1;
-
-								if (numb == 25) {
-									PlayerController->ServerChangeName(StateBP->PlayerNamePrivate);
-								}
-							}*/
-#endif
 
 							if (Settings::TpEveryone) {
 								CharacterBP->Mesh->SetCollisionResponseToChannel(SDK::ECollisionChannel::ECC_Pawn, SDK::ECollisionResponse::ECR_Ignore);
@@ -2639,7 +2801,7 @@ namespace Cheat {
 								CharacterBP->K2_SetActorLocation(BPCharacter->K2_GetActorLocation(), false, 0, true);
 							}
 
-							if (Settings::PlayerEsp) {
+							if (Settings::PlayerEsp && PlayerStuff::PlayerList.size() > 0 && PlayerController->PlayerState) {
 								if (StateBP)
 								{
 
@@ -2674,8 +2836,47 @@ namespace Cheat {
 							}
 
 						}
+						
+						
+#ifdef DEBUG
+						if (Settings::EnemyChams) {
+							auto EnemyMesh = CurrentEnemy->Mesh;
+
+							if (EnemyMesh) {
+								if (!EnemyMesh->bRenderCustomDepth) {
+
+									Message("Set RenderCustomDepth for Enemy!", FOREGROUND_GREEN);
+
+									EnemyMesh->SetRenderCustomDepth(true);
+									EnemyMesh->SetCustomDepthStencilValue(1);
+
+									
+									auto Mats = EnemyMesh->GetMaterials();
+									auto Class_UMaterialInstanceDynamic = SDK::UMaterialInstanceDynamic::StaticClass();
+
+									for (size_t i = 0; i < Mats.Num(); i++)
+									{
+										auto MatInterface = Mats[i];
+
+										if (MatInterface) {
+											auto Material = (SDK::UMaterial*)MatInterface;
+
+											if (Material) {
+												Material->BlendMode = SDK::EBlendMode::BLEND_Masked;
+												Material->TwoSided = true;
+
+												auto MaterialInstance = EnemyMesh->CreateAndSetMaterialInstanceDynamicFromMaterial(0, Material);
 
 
+												
+											}
+										}
+									}
+								}
+							}
+						}
+
+#endif
 						if (Settings::Godmode) {
 							
 							if (!Settings::IniShitsPlayer[7]) {
@@ -2734,12 +2935,12 @@ namespace Cheat {
 
 
 			if (Settings::ItemEsp) {
-				GPStatics->GetAllActorsOfClass(Engine->GameViewport->World, SDK::ABP_DroppedItem_C::StaticClass(), &EnemyArray);
+				auto EnemyArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::ABP_DroppedItem_C::StaticClass());
 
-				if (EnemyArray.IsValid()) {
-					for (size_t i = 0; i < EnemyArray.Num(); i++)
+				if (EnemyArray.size() > 0) {
+					for (size_t i = 0; i < EnemyArray.size(); i++)
 					{
-						if (!EnemyArray.IsValidIndex(i) || !EnemyArray[i])continue;
+						if (!EnemyArray[i])continue;
 
 						auto CurrentThing = (SDK::ABP_DroppedItem_C*)EnemyArray[i];
 
@@ -2780,7 +2981,7 @@ namespace Cheat {
 			if (Settings::TpToExit) {
 				Settings::TpToExit = false;
 				if (SDK::ABP_ExitZone_C::StaticClass()) {
-					auto ExitZone = GPStatics->GetActorOfClass(Engine->GameViewport->World, SDK::ABP_ExitZone_C::StaticClass());
+					auto ExitZone = GetActorOfClass(Engine->GameViewport->World, SDK::ABP_ExitZone_C::StaticClass());
 
 					if (ExitZone && PlayerController->Pawn) {
 
@@ -2803,15 +3004,15 @@ namespace Cheat {
 
 
 			if (Settings::ActorEsp || Settings::ActorEvent || CamsOff) {
-				GPStatics->GetAllActorsOfClass(Engine->GameViewport->World, SDK::AActor::StaticClass(), &EnemyArray);
+				auto EnemyArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::AActor::StaticClass());
 
-				if (EnemyArray.IsValid()) {
+				if (EnemyArray.size() > 0) {
 
 					static bool WallsHidden = false;
 
-					for (size_t i = 0; i < EnemyArray.Num(); i++)
+					for (size_t i = 0; i < EnemyArray.size(); i++)
 					{
-						if (!EnemyArray.IsValidIndex(i) || !UsefullFuncs::ShouldUsePtr(EnemyArray[i]))continue;
+						if (!UsefullFuncs::ShouldUsePtr(EnemyArray[i]))continue;
 
 						auto CurrentEnemy = EnemyArray[i];
 

@@ -28,6 +28,12 @@
     <Filter Include="Headerdateien\Data\ContainingImageData">
       <UniqueIdentifier>{95e8b4c8-8ffc-4072-bbbf-ccc60f9ec0d2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Quelldateien\Config">
+      <UniqueIdentifier>{bba920a8-d176-4373-8ff3-472ffccd2db0}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\Config">
+      <UniqueIdentifier>{139fb867-83d1-4ac8-9301-f256e8409a20}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -6120,6 +6126,12 @@
     <ClInclude Include="Out\File118.h">
       <Filter>Headerdateien\Data\ContainingImageData</Filter>
     </ClInclude>
+    <ClInclude Include="Config.h">
+      <Filter>Headerdateien\Config</Filter>
+    </ClInclude>
+    <ClInclude Include="CheatDefines.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="dllmain.cpp">
@@ -6334,6 +6346,18 @@
     </ClCompile>
     <ClCompile Include="SDK\SDK\UMG_functions.cpp">
       <Filter>Quelldateien\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\SDK\SubtitleTextWB_functions.cpp">
+      <Filter>Quelldateien\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\SDK\MP_Thallasophobia_functions.cpp">
+      <Filter>Quelldateien\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="SDK\SDK\Paper2D_functions.cpp">
+      <Filter>Quelldateien\SDK</Filter>
+    </ClCompile>
+    <ClCompile Include="Config.cpp">
+      <Filter>Quelldateien\Config</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -131,11 +131,15 @@ namespace CWINGui
 
 	UCanvas* canvas;
 
-
 	bool hover_element = false;
 	FVector2D menu_pos = FVector2D{ 0, 0 };
 	float offset_x = 0.0f;
 	float offset_y = 0.0f;
+	float DeltaTimeWindow = 0.0f;
+
+	char ChangeWindowSizeState = 0; // 0 = false, 1 = true, 2 = true + custom SizeChange Speed
+	float SizeChangeWindowSizeSpeed = 0.0f;
+	FVector2D menu_size_target = { 0,0 };
 
 	FVector2D first_element_pos = FVector2D{ 0, 0 };
 
@@ -155,6 +159,7 @@ namespace CWINGui
 	void SetupCanvas(UCanvas* _canvas)
 	{
 		canvas = _canvas;
+		DeltaTimeWindow = 0.0f;
 
 		if (GetAsyncKeyState(VK_LBUTTON)) {
 			current_element = 0;
@@ -410,16 +415,109 @@ namespace CWINGui
 
 			return Texture_;
 		}
+
+		SDK::UTexture2D* GetLastImage() {
+			return TextureArray[CurrentIndex];
+		}
 	};
 
 	void DrawTexture(SDK::UTexture2D* texture, SDK::FVector2D ScreenPos, SDK::FVector2D ScreenSize, float rotation = 0.0f, SDK::FLinearColor color = {1.0f, 1.0f, 1.0f, 1.0f}, SDK::EBlendMode BlendMode = SDK::EBlendMode::BLEND_Masked);
 
-	bool Window(const char* name, FVector2D* pos, FVector2D size, bool isOpen, GifData* Gif = nullptr)
+	float GetDistanceVector2(FVector2D vector1, FVector2D vector2) {
+		FVector2D Distance = { vector2.X - vector1.X, vector2.Y - vector1.Y };
+
+		return std::sqrt( (Distance.X * Distance.X) + (Distance.Y * Distance.Y) );
+	}
+
+	float GetMagnitudeVector2(FVector2D vector) {
+		return std::sqrt( (vector.X * vector.X) + (vector.Y * vector.Y) );
+	}
+
+	bool isInRange(float x, float min, float max) {
+		float xmin = x - min;
+		float xmax = x + max;
+
+		return (x >= xmin && x <= xmax);
+	}
+
+	FVector2D GetNormalizedVector2(FVector2D vector) {
+		float Length = GetMagnitudeVector2(vector);
+
+		if (std::floorf(Length) < 0.1f) {
+			return FVector2D(0.0f, 0.0f);
+		}
+
+		return FVector2D(vector.X / Length, vector.Y / Length);
+	}
+
+
+	const float NormalizedAnimationSpeed = 0.3f;//in seconds
+	FVector2D LastAnimationVector = { 0, 0 };
+
+	bool Window(const char* name, FVector2D* pos, FVector2D& size, bool isOpen, GifData* Gif = nullptr)
 	{
+		static ULONGLONG LastUpdateTick = GetTickCount64();
+		static float CurrentAnimationTime = 0.0f;
+
 		elements_count = 0;
 
 		if (!isOpen)
 			return false;
+
+		auto TickCount = GetTickCount64();
+		DeltaTimeWindow = (TickCount - LastUpdateTick) / 1000.0f;
+		DeltaTimeWindow = (DeltaTimeWindow < 0.001f ? 0.014f : DeltaTimeWindow);
+
+		LastUpdateTick = TickCount;
+
+		switch (ChangeWindowSizeState)
+		{
+		case 0:
+			break;
+
+		case 1:
+			// Calculate the normalized time that has passed relative to the total animation duration
+			CurrentAnimationTime += DeltaTimeWindow;
+			
+
+			if (float TimeCurrent = CurrentAnimationTime / NormalizedAnimationSpeed; TimeCurrent >= 1.0f) {
+				// Animation is complete
+				ChangeWindowSizeState = 0;
+				size = menu_size_target;
+				LastAnimationVector = { 0, 0 };
+				ZeroGUI::isInputLocked = false;
+				CurrentAnimationTime = 0.0f;
+			}
+			else {
+
+				size.X += ( (menu_size_target.X - LastAnimationVector.X) / NormalizedAnimationSpeed) * DeltaTimeWindow;
+				size.Y += ( (menu_size_target.Y - LastAnimationVector.Y) / NormalizedAnimationSpeed) * DeltaTimeWindow;
+			}
+			break;
+
+		//case 2:
+		//	if (auto normalizednext = NormalizeVector2(menu_size_target - size); normalizednext.X < 0.01f && normalizednext.Y < 0.01f) { // Increased threshold
+		//		ChangeWindowSizeState = 0;
+		//		size = menu_size_target;
+		//	}
+		//	else
+		//	{
+		//		if (GetDistanceVector2(normalizednext) > 0.0f) {
+		//			normalizednext = normalizednext * DeltaTimeWindow;
+		//		}
+
+		//		// Debugging output to ensure calculations are correct
+		//		printf("Size change: (%f, %f)\n", normalizednext.X * NormalizedAnimationSpeed * 20, normalizednext.Y * NormalizedAnimationSpeed * 20);
+
+		//		size.X += (normalizednext.X * NormalizedAnimationSpeed) * 20;
+		//		size.Y += (normalizednext.Y * NormalizedAnimationSpeed) * 20;
+		//	}
+		//	break;
+
+		default:
+			break;
+		}
+
 
 		bool isHovered = MouseInZone(FVector2D{ pos->X, pos->Y }, size);
 
@@ -496,6 +594,21 @@ namespace CWINGui
 		//DrawThunder(size, *pos);
 
 		return true;
+	}
+
+	void ChangeWindowSize(FVector2D lastSize, FVector2D TargetSize, float Speed = 0.0f) {
+		ZeroGUI::isInputLocked = true; //Lock buttons so no accidental Click happens
+		LastAnimationVector = lastSize;
+		SizeChangeWindowSizeSpeed = Speed * NormalizedAnimationSpeed;
+		menu_size_target = TargetSize;
+
+		if (Speed > 0.0f) {
+			ChangeWindowSizeState = 2;
+		}
+		else
+		{
+			ChangeWindowSizeState = 1;
+		}
 	}
 
 	class Thunder {
@@ -684,7 +797,7 @@ namespace CWINGui
 		if (first_element_pos.X == 0.0f)
 			first_element_pos = pos;
 
-		if (isHovered && ZeroGUI::Input::IsMouseClicked(0, elements_count, false))
+		if (isHovered && ChangeWindowSizeState == 0 && ZeroGUI::Input::IsMouseClicked(0, elements_count, false))
 			return true;
 
 		return false;
@@ -1053,17 +1166,20 @@ namespace CWINGui
 
 	//		if (current_element == elements_count)
 	//		{
-	//			std::string strd = "";
-	//			for (size_t i = 'A'; i < 'z'; i++)
-	//			{
-	//				if (GetAsyncKeyState(i) & 1) {
-	//					strd += (char)i;
+	//			auto PlayerController = Cheat::PlayerController;
+
+	//			if (PlayerController) {
+
+	//				std::string strd = "";
+	//				for (size_t i = '0'; i < 'z'; i++)
+	//				{
+	//					if (PlayerController->IsInputKeyDown(SDK::FKey::)) {
+	//						namePtr += (wchar_t)i;
+	//					}
 	//				}
 	//			}
 
-	//			if (strd != "") {
-	//				mbstowcs((wchar_t*)namePtr, strd.c_str(), 1000);
-	//			}
+
 	//		}
 	//	}
 

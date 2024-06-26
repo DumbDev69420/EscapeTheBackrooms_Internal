@@ -3,6 +3,7 @@
 #include <unordered_map>
 #include <format>
 #include <functional>
+#include "Config.h"
 
 namespace Backend {
 	using EventHandler = std::function<void()>;
@@ -47,6 +48,7 @@ namespace Backend {
 
 	std::string LevelName = "";
 	std::string HostSteamID = "";
+	std::wstring HostID = L""; //Ip for uses
 	std::string HostSteamID_Clean = "";
 
 	Level_ LevelCurrent = Level_::MainLvl;
@@ -220,6 +222,19 @@ namespace PlayerStuff {
 }
 
 namespace Settings {
+	namespace Spawner {
+		enum Spawner_Stuff {
+			None = -1,
+			Boat,
+			Rope,
+			BactiriaMonster,
+			ExitZone,
+			ExitZoneEndGame,
+			FireworkProj_Bugged,
+			Firework
+		};
+	}
+
 	void SetName_NameChanger(std::wstring name);
 
 	enum Items
@@ -251,13 +266,26 @@ namespace Settings {
 		SelfPawn
 	};
 
-	enum Spawner_Stuff {
-		Boat,
-		Player,
-		BactiriaMonster,
-		ExitZone
+
+	enum PlayerDynamic {
+		PIsCameraReplicated,
+		PIsFreeCam,
+		PSpoofChatMessage,
+		PDetachFirework,
+		PTeleportDetachedFirework,
+		PInteractWithSpawnedBoat,
+		PFlaregunSpammer,
+		PGodMode,
+		PUnlimitedSanity,
+		PUnlimitedStamina
 	};
 
+	const float CheatVersion = 2.0f;
+	double TimeSpendCheating = 0.0f;
+
+	ULONGLONG TickCountCheatTime = 0;
+
+	bool NewVersion_ = false;
 	bool Open = true;
 	bool Esp = false;
 	bool EnemyEsp = false;
@@ -266,6 +294,7 @@ namespace Settings {
 	bool ItemEsp = false;
 	bool ActorEsp = false;
 	bool InteractablesEsp = false;
+	bool EnemyChams = true;
 	bool SpectatorList = false;
 	
 
@@ -277,9 +306,12 @@ namespace Settings {
 
 	bool TeleportEventPlayer = false;
 	bool TeleportToEventPlayer = false;
+	bool SpawnRopeAtEventPlayer = false;
+	bool SpectateEventPlayer = false;
 	bool EventRespawnPlayer = false;
 	bool UseItemEventPlayer = false;
 	bool EventCollectDataPlayer = false;
+	bool StealPawnEventPlayer = false;
 
 	int Event_PlayerID = 0;
 
@@ -299,6 +331,10 @@ namespace Settings {
 
 	//Misc
 
+	bool Freecam = false;
+	bool RejoinServer_Event = false,
+	bool ClickTpPawn = false;
+	bool UsedSpawnTest = false;
 	bool ProtectCamServer = true;
 	bool TestEvent_PrintSteamIDS = false;
 	bool UnlockPlayers = false;
@@ -331,7 +367,7 @@ namespace Settings {
 	bool HideWalls = false;
 	bool PlayerFly = false;
 	bool PeacefullMode = false;
-	bool Spawner = false;
+	bool Spawner_ = false;
 	bool SilentItemSpawner = false;
 	bool LoadLevel_ = false;
 	bool Godmode = false;
@@ -345,6 +381,10 @@ namespace Settings {
 
 	bool SpawnItem = false;
 	Items ItemToSpawn;
+
+	bool SpawnerEvent = false;
+	Spawner::Spawner_Stuff SpawnerValue = Spawner::Spawner_Stuff::None;
+	std::string SpawningValue = "";
 
 	float PlayerFlySpeedY = 100.0f;
 	float Fov = 90.0f;
@@ -361,7 +401,7 @@ namespace Settings {
 
 	//For Name Changer
 	std::wstring LevelToLoad = L"";
-	std::wstring NameTo_set = L"Nizi7010"; //GWorld:0x04C67430
+	std::wstring NameTo_set = L"EagerPlayer_420";
 	std::wstring OriginalName = L"";
 	std::wstring MessageSpoof = L"";
 	std::wstring NameOfVictim = L"";
@@ -369,6 +409,47 @@ namespace Settings {
 	SDK::FVector2D WindowPos{ 500.0f, 475.0f };
 
 	SDK::FVector LastServerPosition;
+
+	//For Saving reasons
+	//byte CurrentName_Saved[ConfigSystemInternalSettings::MaxTypeSize * 2];
+
+	std::thread* CurrentInputThread_Config = nullptr;
+
+
+	void AddFieldsToConfig(ConfigSystem* configsys) {
+		configsys->AddField(&PeacefullMode, 0);
+		configsys->AddField(&NoCams, 1);
+		configsys->AddField(&Noclip, 2);
+		configsys->AddField(&PlayerFly, 3);
+		configsys->AddField(&VelocityFly, 4);
+		configsys->AddField(&SpectatorList, 5);
+		configsys->AddField(&EnemyEsp, 6);
+		configsys->AddField(&PlayerEsp, 7);
+		configsys->AddField(&ItemEsp, 8);
+		configsys->AddField(&InteractablesEsp, 9);
+		configsys->AddField(&BoatEsp, 10);
+		configsys->AddField(&ActorEsp, 11);
+		configsys->AddField(&RGBFlashlight, 12);
+		configsys->AddField(&EnviromentRGB, 13);
+		configsys->AddField(&Freecam, 14);
+		configsys->AddField(&Spawner_, 15);
+		configsys->AddField(&ShowWatermark, 16);
+		configsys->AddField(&BoatFly,17);
+		configsys->AddField(&Rapidfire,18);
+		configsys->AddField(&InfiniteStamina,19);
+		configsys->AddField(&InfiniteSanity, 20);
+		configsys->AddField(&NoStumble, 21);
+		configsys->AddField(&Godmode, 22);
+		configsys->AddField(&SpeedHack, 23);
+		configsys->AddField(&NameChanger, 24);
+		configsys->AddField(&BoatSpeedhack, 25);
+		configsys->AddField(&FovChanger, 26);
+		configsys->AddField(&Fov, 27);
+		configsys->AddField(&Speed, 28);
+		configsys->AddField(&BoatSpeed, 29);
+		configsys->AddField(&PlayerFlySpeedY, 30);
+		//configsys->AddField(&CurrentName_Saved, 31);
+	}
 }
 
 
@@ -382,7 +463,13 @@ void Backend::CallbackNewLevel()
 }
 
 void Settings::SetName_NameChanger(std::wstring name) {
+	//const int SizeName = sizeof(CurrentName_Saved);
+
 	NameTo_set = name;
+
+	//int NameSize = (NameTo_set.size() > SizeName ? SizeName : NameTo_set.size());
+
+	//std::memcpy((void*)CurrentName_Saved, NameTo_set.data(), NameSize);
 	Settings::IniShitsLevel[3] = false;
 }
 
@@ -390,26 +477,19 @@ void Settings::SetName_NameChanger(std::wstring name) {
 std::wstring Algorithm_(std::wstring input) {
 	std::wstring out = L"";
 
+	out.reserve(input.size());
+
 	for (size_t i = 0; i < input.size(); i++)
 	{
 		auto letternormal = input[i];
-		auto letterLower = (wchar_t)std::tolower(letternormal, std::locale());
-		bool hasChangedSize = (letternormal != letterLower);
 
-		switch (letterLower)
-		{
-		case L'i':
-			out += (hasChangedSize) ? L'Í' : L'í';
-			break;
-
-		case L'u':
-			out += (hasChangedSize) ? L'Ú' : L'ú';
-			break;
-
-		default:
-			out += letternormal;
-			break;
-		}
+		wchar_t charNext = (letternormal == L'i' ? L'í' :
+			                letternormal == L'u' ? L'ú' :
+			                letternormal == L'I' ? L'Í' :
+			                letternormal == L'U' ? L'Ú' :
+			                letternormal);
+		
+		out += charNext;
 	}
 
 	return out;

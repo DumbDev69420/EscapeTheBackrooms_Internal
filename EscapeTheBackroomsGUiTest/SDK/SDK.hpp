@@ -25,13 +25,19 @@ typedef unsigned __int64 uint64;
 
 namespace Offsets
 {
-	constexpr int32 GObjects          = 0x04B1FA90;
-	constexpr int32 AppendString      = 0x01162410;
-	constexpr int32 GNames            = 0x00000000;
-	constexpr int32 ProcessEvent      = 0x013522E0;
-	constexpr int32 ProcessEventIdx   = 0x00000044;
-	constexpr int32 PostRenderIdx     = 0x00000064;
-	constexpr int32 StaticConstructObject_Internal = 0x1359C70;
+	constexpr int32 GObjects                           = 0x04B1FA90;
+	constexpr int32 AppendString                       = 0x01162410;
+	constexpr int32 GNames                             = 0x00000000;
+	constexpr int32 ProcessEvent                       = 0x013522E0;
+	constexpr int32 ProcessEventIdx                    = 0x00000044;
+	constexpr int32 PostRenderIdx                      = 0x00000064;
+												       
+	constexpr int32 StaticConstructObject_Internal     = 0x01359C70; // 48 89 5c 24 ? 48 89 74 24 ? 55 57 41 54 41 56 41 57 48 8d ac 24 ? ? ? ? 48 81 ec ? ? ? ? 48 8b 05 ? ? ? ? 48 33 c4 48 89 85 ? ? ? ? 48 8b 39
+	constexpr int32 StaticLoadObjectInternal           = 0x0135BE10; // 4c 89 4c 24 ? 48 89 54 24 ? 48 89 4c 24 ? 55 53 56 57 41 54 41 55 41 56 41 57 48 8b ec
+	constexpr int32 FPakPlatformFile$$Mount            = 0x0272C690; // 4c 8b dc 55 53 57 49 8d ab ? ? ? ? 48 81 ec ? ? ? ? 48 8b 05 ? ? ? ? 48 33 c4 48 89 85 ? ? ? ? 49 89 73 ? 49 8b f1
+	constexpr int32 FPlatformFileManager$$Get          = 0x01068D00; // Not directly sig of Function, Function this finds has a call to FPlatformFileManager::Get. 40 53 41 54 41 55 41 57 48 83 ec ? 49 8b d8
+	constexpr int32 FPakPlatformFile$$FindPlatformFile = 0x01067CD0; // 48 89 5c 24 ? 57 48 83 ec ? 48 8b 19 48 8b fa 48 85 db 74 ? 48 8b 03 48 8b cb                                      Or use Sig from above also get called in Function!
+
 }
 
 #include "PropertyFixup.hpp"
