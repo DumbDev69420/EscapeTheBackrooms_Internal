@@ -192,6 +192,21 @@ namespace PlayerStuff {
 			}
 		}
 
+		static std::string SanitizeString(std::string Input) {
+			std::string output = "";
+
+			int Sizecc = Input.size();
+
+			for (size_t i = 0; i < 14; i++)
+			{
+				if (i >= Sizecc) break;
+
+				output += Input[i];
+			}
+
+			return output;
+		}
+
 		static std::wstring SanitizeWString(std::wstring Input) {
 			std::wstring output = L"";
 
@@ -327,6 +342,11 @@ namespace Settings {
 
 	float Host_PlayersGravityScale = 0.5f;
 	Host_Pawns hostPawn = Host_Pawns::defaultEmptyPawn;
+
+	//Anti Cheat
+	bool AntiCheat = false;
+	bool AC_InvalidItemSpawner = false;
+	bool AC_NameChanger = false;
 
 
 	//Misc

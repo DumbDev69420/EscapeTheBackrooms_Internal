@@ -894,6 +894,18 @@ namespace Cheat {
 		return Objects;
 	}
 
+	bool IsClassOfClass(SDK::UClass* ClassIn, SDK::UClass* ClassToCheck) {
+		for (SDK::UStruct* Super = ClassIn; Super; Super = Super->Super)
+		{
+			if (Super == ClassToCheck)
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
 	std::vector<std::string> FuncsNames;
 
 	void GodMode(SDK::UObject* Caller, SDK::UFunction* Func, void* Params) {
@@ -963,6 +975,7 @@ namespace Cheat {
 						Message("Console Constructed!. Btw Console Constructs, but wont open yet :( ");
 
 						Engine->GameViewport->ViewportConsole = Console;
+
 
 						SDK::UInputSettings* inputSettings = SDK::UInputSettings::GetDefaultObj()->GetInputSettings();
 
@@ -1617,6 +1630,7 @@ namespace Cheat {
 				}
 
 #ifdef DEBUG
+				/*
 				{ // Dont wanna pollute the main codeblock with static value, so own codeblock
 
 					static SDK::FGuid MapPackageGuidCurrent = { 0,0,0,0 }; //use guid for whatever the fuck
@@ -1628,6 +1642,7 @@ namespace Cheat {
 						PlayerController->ClientTravelInternal(SDK::FString(Backend::HostID.c_str()), SDK::ETravelType::TRAVEL_Absolute, true, MapPackageGuidCurrent);
 					}
 				}
+				*/
 #endif
 
 				/*
@@ -2203,14 +2218,14 @@ namespace Cheat {
 
 
 
-
+					//Spam Flareguns
 					if (UsefullFuncs::IsKeyPressed(VK_F3, true))
 					{
-						Settings::IniShitsPlayer[6] = !Settings::IniShitsPlayer[6];
+						Settings::IniShitsPlayer[Settings::PlayerDynamic::PFlaregunSpammer] = !Settings::IniShitsPlayer[Settings::PlayerDynamic::PFlaregunSpammer];
 					}
 
 
-					if(Settings::IniShitsPlayer[6])
+					if(Settings::IniShitsPlayer[Settings::PlayerDynamic::PFlaregunSpammer])
 				    {
 					   auto cam = (SDK::ABP_FlareGun_C*)BPCharacter->CurrentItem_Rep;
 

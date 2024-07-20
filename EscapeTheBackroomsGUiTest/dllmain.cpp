@@ -1,9 +1,11 @@
-﻿#include "SDK/SDK.hpp"
-#include <thread>
+﻿#include <thread>
 #include <algorithm>
+
+#include "vcpkg_Out/include/MinHook.h"
+#include "SDK/SDK.hpp"
+#include "Out/IncludeFile.h"
+
 #include "Cheat.h"
-#include <MinHook.h>
-#include <IncludeFile.h>
 #include "Config.h"
 
 FILE* ConsoleFile = nullptr;
@@ -311,13 +313,19 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 			}
 		}
 
-		if (!IsLocalPlayer) {
+		if(CallingPawn->PlayerState)
+		     Cheat::Message(std::format("Spawned Item {} by Player: {}", (!Cheat::IsClassOfClass(params_->ItemClass, SDK::ABP_Item_C::StaticClass()) ? "Invalid Item" : params_->ItemClass->GetName()), PlayerStuff::Player::SanitizeString(CallingPawn->PlayerState->GetPlayerName().ToString())));
+		else
+			return;
+		
 
+		if (!IsLocalPlayer) {
 			if (auto ItemClass = params_->ItemClass; ItemClass) {
 
-				if (!ItemClass->IsA(SDK::ABP_Item_C::StaticClass())) {
+				if (!Cheat::IsClassOfClass(params_->ItemClass, SDK::ABP_Item_C::StaticClass())) {
 					if (IsLocalHost) {
 						Cheat::MessageW(L"Non Item was passed to SpawnEquipItem, kicking that bad Cheater!");
+
 						GameMode->KickPlayer(CallingPawn->PlayerState, CallingPawn->GetOwner(), (SDK::AMP_PlayerController_C*)CallingPawn->Controller, true, true);
 					}
 
@@ -332,6 +340,8 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 				}
 			}
 		}
+
+		
 	}
 
 	
@@ -359,6 +369,7 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 					}
 					else
 					{
+
 						PlayerNameChanges[i].second.push_back(NewName);
 						break;
 					}
@@ -481,15 +492,8 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				if (CWINGui::Window("?", &WindowPos, WindowSize, Settings::NewVersion_)) {
 					CWINGui::Text(std::format(L"New Version {}!!!", Settings::CheatVersion).c_str());
 
-					CWINGui::Text(L"* Added Server Sided Teleporting!");
-					CWINGui::Text(L"* Added Server Sided Object Spawner!");
-					CWINGui::Text(L"* Added Boat to Object Spawner.");
-					CWINGui::Text(L"* Added Config System");
-					CWINGui::Text(L"* Added Rope on Player to Player Options.");
-					CWINGui::Text(L"* Added Freecam and Server Sided Teleporter in Freecam.");
-					CWINGui::Text(L"* Added Freecam and Server Sided Teleporter in Freecam.");
-					CWINGui::Text(L"* Added some new Menu Designing.");
-					CWINGui::Text(L"* Added Chat Spoofer.");
+					CWINGui::Text(L"* Fixed Memory Leak Bug!");
+					CWINGui::Text(L"* Fixed Anti Cheat (Is off now by Default)!");
 
 					CWINGui::Text(L""), CWINGui::SameLine();
 

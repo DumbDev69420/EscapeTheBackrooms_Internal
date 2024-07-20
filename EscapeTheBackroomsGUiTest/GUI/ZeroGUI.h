@@ -320,6 +320,14 @@ namespace CWINGui
 			canvas->K2_DrawLine(FVector2D{ initial_pos.X, initial_pos.Y + i }, FVector2D{ initial_pos.X + w, initial_pos.Y + i }, 1.0f, color);
 	}
 
+	enum Rounding : short {
+		LeftCorner = 0x1,
+		RightCorner = 0x10,
+		LeftCornerDown = 0x100,
+		RightCornerDown = 0x1000,
+		AllCorners = 0x1111,
+	};
+
 	void DrawFilledCircle(FVector2D pos, float r, FLinearColor color)
 	{
 		float smooth = 0.07f;
@@ -711,6 +719,62 @@ namespace CWINGui
 			}
 		}
 	}
+	
+
+	void DrawRoundedFilledRect(UCanvas* canvas, FVector2D pos, FVector2D size, FLinearColor color, int Sidenumbers = 20, float rounding = 2.0f, Rounding flag = Rounding::AllCorners)
+	{
+		const float PI = 3.1415927f;
+
+		bool RoundLeftCornerUp = flag & Rounding::LeftCorner;
+		bool RoundRightCornerUp = flag & Rounding::RightCorner;
+		bool RoundLeftCornerDown = flag & Rounding::LeftCornerDown;
+		bool RoundRightCornerDown = flag & Rounding::RightCornerDown;
+
+		for (float y = 0.0f; y < size.Y; y += 1.0f)
+		{
+			FVector2D StartPos = { pos.X, pos.Y + y };
+			FVector2D EndPos = { pos.X + size.X, pos.Y + y };
+
+
+			if (RoundLeftCornerUp || RoundRightCornerUp && y < rounding)
+			{
+				if (RoundLeftCornerUp) {
+					float angle = (y / rounding) * (PI / 2);
+
+					StartPos.X += rounding * (1 - std::cosf(angle));
+					StartPos.Y += rounding * (1 - std::sinf(angle));
+				}
+				if (RoundRightCornerUp) {
+					float angle = (y / rounding) * (PI / 2);
+
+					EndPos.X -= rounding * (1 - std::cosf(angle));
+					EndPos.Y += rounding * (1 - std::sinf(angle));
+				}
+			}
+
+			if (RoundLeftCornerDown || RoundRightCornerDown && y > size.Y - rounding)
+			{
+				if (RoundLeftCornerDown) {
+					float dy = y - (size.Y - rounding);
+					float angle = (dy / rounding) * (PI / 2);
+
+					StartPos.X += rounding * (1 - std::cosf(angle));
+					StartPos.Y -= rounding * (1 - std::sinf(angle));
+				}
+				if (RoundRightCornerDown) {
+					float dy = y - (size.Y - rounding);
+					float angle = (dy / rounding) * (PI / 2);
+
+					EndPos.X -= rounding * (1 - std::cosf(angle));
+					EndPos.Y -= rounding * (1 - std::sinf(angle));
+				}
+			}
+
+			canvas->K2_DrawLine(StartPos, EndPos, 1.0f, color);
+
+		}
+	}
+
 
 	void Text(const wchar_t* text, bool center = false, bool outline = false)
 	{
