@@ -551,6 +551,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 					CWINGui::Text(L"* Fixed Memory Leak Bug");
 					CWINGui::Text(L"* Fixed Anti Cheat (plus its off now by Default)");
+					CWINGui::Text(L"* Added Working Config System");
 
 					CWINGui::Text(L""), CWINGui::SameLine();
 
