@@ -34,6 +34,12 @@
     <Filter Include="Headerdateien\Config">
       <UniqueIdentifier>{139fb867-83d1-4ac8-9301-f256e8409a20}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headerdateien\ZeroGUI">
+      <UniqueIdentifier>{82cfed56-5242-4a99-9653-df278156a7c8}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Headerdateien\Minhook">
+      <UniqueIdentifier>{d8f0623a-90da-43b3-a824-7dc2affaf33f}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="framework.h">
@@ -6131,6 +6137,15 @@
     </ClInclude>
     <ClInclude Include="CheatDefines.h">
       <Filter>Headerdateien</Filter>
+    </ClInclude>
+    <ClInclude Include="vcpkg_Out\include\MinHook.h">
+      <Filter>Headerdateien\Minhook</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ZeroGUI.h">
+      <Filter>Headerdateien\ZeroGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI\ZeroInput.h">
+      <Filter>Headerdateien\ZeroGUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
