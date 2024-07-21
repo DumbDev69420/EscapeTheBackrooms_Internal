@@ -2,9 +2,77 @@
 
 #include "SDK/SDK.hpp"
 #include <vector>
+#include <string>
 
+struct boolF
+{
+	bool value = false;
+	std::string reason = "";
 
-namespace Functions {
+	boolF(bool value, std::string reason)
+	{
+		this->value = value;
+		this->reason = reason;
+	}
+
+	boolF(bool value)
+	{
+		this->value = value;
+	}
+
+	operator bool()
+	{
+		return value;
+	}
+
+	operator std::string()
+	{
+		return reason;
+	}
+
+	void operator=(boolF& other)
+	{
+		this->value = other.value;
+		this->reason = other.reason;
+	}
+};
+
+struct boolFW
+{
+	bool value = false;
+	std::wstring reason = L"";
+
+	boolFW(bool value, std::wstring reason)
+	{
+		this->value = value;
+		this->reason = reason;
+	}
+
+	boolFW(bool value)
+	{
+		this->value = value;
+	}
+
+	operator bool()
+	{
+		return value;
+	}
+
+	operator std::wstring()
+	{
+		return reason;
+	}
+
+	void operator=(boolFW& other)
+	{
+		this->value = other.value;
+		this->reason = other.reason;
+	}
+};
+
+namespace Functions
+{
+
 	static void memcpy_(void* _Dst, void const* _Src, size_t _Size)
 	{
 		auto csrc = (char*)_Src;
@@ -253,4 +321,85 @@ namespace Cheat {
 		return reinterpret_cast<SDK::UConsole*>(StaticConstructObject_Internal(&params));
 	}
 
+}
+
+
+
+namespace FunctionsSpecial
+{
+
+	SDK::APlayerController* GetLocalPlayerController(SDK::UWorld* World)
+	{
+		if (!World->OwningGameInstance || !&World->OwningGameInstance->LocalPlayers || World->OwningGameInstance->LocalPlayers[0]) { return nullptr; }
+
+		auto LocalPlayer = World->OwningGameInstance->LocalPlayers[0];
+
+		auto PlayerController = (SDK::AMP_PlayerController_C*)LocalPlayer->PlayerController;
+		if (!PlayerController) { return nullptr; }
+
+
+		return PlayerController;
+	}
+
+	//Check if Localplayer is the Host of the Session
+	bool IsLocalHost(SDK::UWorld* World)
+	{
+		return (World->AuthorityGameMode != nullptr);
+	}
+
+	bool IsPlayerLocal(SDK::UWorld* World, SDK::ACharacter* Player)
+	{
+		auto PlayerCCLocal = GetLocalPlayerController(World);
+
+		if (!PlayerCCLocal || !PlayerCCLocal->Character)
+			return false;
+
+		return PlayerCCLocal->Character == Player;
+	}
+
+	//Kicks an Player
+	boolF KickPlayer(SDK::UWorld* World, SDK::ACharacter* Player, std::string Reason)
+	{
+		auto GameMode = (SDK::AMP_GameMode_C*)World->AuthorityGameMode;
+
+		if (GameMode)
+		{
+			if (IsPlayerLocal(World, Player))
+			{
+				return boolF(false, "Can´t Kick Player, Because You Can´t Kick Yourself");
+			}
+
+			auto PlayerState = Player->PlayerState;
+			GameMode->KickPlayer(PlayerState, Player->GetOwner(), (SDK::AMP_PlayerController_C*)Player->Controller, true, true);
+
+			return boolF(true, std::format("Kicking Player: {}, Reason: {}", PlayerStuff::Player::SanitizeString(PlayerState->PlayerNamePrivate.ToString()), Reason));
+		}
+		else
+		{
+			return boolF(false, "Can´t Kick Player, Because your not the Host");
+		}
+	}
+
+	//Kicks an Player
+	boolFW KickPlayer(SDK::UWorld* World, SDK::ACharacter* Player, std::wstring Reason)
+	{
+		auto GameMode = (SDK::AMP_GameMode_C*)World->AuthorityGameMode;
+
+		if (GameMode)
+		{
+			if (IsPlayerLocal(World, Player))
+			{
+				return boolFW(false, L"Can´t Kick Player, Because You Can´t Kick Yourself");
+			}
+
+			auto PlayerState = Player->PlayerState;
+			GameMode->KickPlayer(PlayerState, Player->GetOwner(), (SDK::AMP_PlayerController_C*)Player->Controller, true, true);
+
+			return boolFW(true, std::format(L"Kicking Player: {}, Reason: {}", PlayerStuff::Player::SanitizeWString(PlayerState->PlayerNamePrivate.ToWString()), Reason));
+		}
+		else
+		{
+			return boolFW(false, L"Can´t Kick Player, Because your not the Host");
+		}
+	}
 }
