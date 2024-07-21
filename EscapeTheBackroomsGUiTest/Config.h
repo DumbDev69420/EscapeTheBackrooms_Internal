@@ -115,7 +115,7 @@ public:
 	std::vector<std::string> GetLastErrors();
 
 	//See if the Config System has failed anywhere
-	bool hasConfigFailed() { return failed; };
+	constexpr bool hasConfigFailed() const { return failed; };
 	//Call when switching Configs
 	bool ActivateConfig(std::string ConfigName, std::string Path);
 	bool WriteToFields();
