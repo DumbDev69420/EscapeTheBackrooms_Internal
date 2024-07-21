@@ -294,84 +294,123 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 	}
 	
 	if (execF == FunctionHooks[BPCharacter_Demo_C_SpawnEquipItem_SERVER]) {
-		auto CallingPawn = (SDK::ABPCharacter_Demo_C*)Obj;
+		if (Settings::AntiCheat && Settings::AC_InvalidItemSpawner) 
+		{
 
-		auto params_ = (SDK::Params::ABPCharacter_Demo_C_SpawnEquipItem_SERVER_Params*)Parms;
+			auto CallingPawn = (SDK::ABPCharacter_Demo_C*)Obj;
 
-		bool IsLocalHost = false;
-		bool IsLocalPlayer = false;
+			auto params_ = (SDK::Params::ABPCharacter_Demo_C_SpawnEquipItem_SERVER_Params*)Parms;
 
-		SDK::AMP_GameMode_C* GameMode = nullptr;
+			bool IsLocalHost = false;
+			bool IsLocalPlayer = false;
 
-		if (CallingPawn->Controller) {
+			SDK::AMP_GameMode_C* GameMode = nullptr;
+
 			auto world = Cheat::Engine->GameViewport->World;
-			IsLocalHost = true; 
-			GameMode = (SDK::AMP_GameMode_C*)world->AuthorityGameMode;
 
-			if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
-				IsLocalPlayer = (CallingPawn->Controller == LocalPlayer->PlayerController);
-			}
-		}
-
-		if(CallingPawn->PlayerState)
-		     Cheat::Message(std::format("Spawned Item {} by Player: {}", (!Cheat::IsClassOfClass(params_->ItemClass, SDK::ABP_Item_C::StaticClass()) ? "Invalid Item" : params_->ItemClass->GetName()), PlayerStuff::Player::SanitizeString(CallingPawn->PlayerState->GetPlayerName().ToString())));
-		else
-			return;
-		
-
-		if (!IsLocalPlayer) {
-			if (auto ItemClass = params_->ItemClass; ItemClass) {
-
-				if (!Cheat::IsClassOfClass(params_->ItemClass, SDK::ABP_Item_C::StaticClass())) {
-					if (IsLocalHost) {
-						Cheat::MessageW(L"Non Item was passed to SpawnEquipItem, kicking that bad Cheater!");
-
-						GameMode->KickPlayer(CallingPawn->PlayerState, CallingPawn->GetOwner(), (SDK::AMP_PlayerController_C*)CallingPawn->Controller, true, true);
-					}
-
-
-				}
-			}
-			else
+			if (CallingPawn->Controller) 
 			{
-				if (IsLocalHost) {
-					Cheat::MessageW(L"Nullpointer was passed to SpawnEquipItem, kicking that bad Cheater!");
-					GameMode->KickPlayer(CallingPawn->PlayerState, CallingPawn->GetOwner(), (SDK::AMP_PlayerController_C*)CallingPawn->Controller, true, true);
+				
+
+				IsLocalHost = true;
+
+				GameMode = (SDK::AMP_GameMode_C*)world->AuthorityGameMode;
+
+				if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
+					IsLocalPlayer = (CallingPawn->Controller == LocalPlayer->PlayerController);
+				}
+			}
+
+			if (CallingPawn->PlayerState)
+				Cheat::Message(std::format("Spawned Item {} by Player: {}", (!Cheat::IsClassOfClass(params_->ItemClass, SDK::ABP_Item_C::StaticClass()) ? "Invalid Item" : params_->ItemClass->GetName()), PlayerStuff::Player::SanitizeString(CallingPawn->PlayerState->GetPlayerName().ToString())));
+			else //Invalid Player
+				return;
+
+
+			if (!IsLocalPlayer) {
+				if (auto ItemClass = params_->ItemClass; ItemClass) 
+				{
+
+					if (!Cheat::IsClassOfClass(params_->ItemClass, SDK::ABP_Item_C::StaticClass())) {
+						if (IsLocalHost) {
+							const char* Reason = "Non Item Class was passed to SpawnEquipItem";
+
+							if (Settings::AC_KickOnViolation)
+							{
+								auto re = FunctionsSpecial::KickPlayer(world, CallingPawn, Reason);
+								Cheat::Message(re);
+							}
+							else
+								Cheat::Message(Reason);
+
+							return;
+						}
+
+
+					}
+				}
+				else
+				{
+					if (IsLocalHost) 
+					{
+						const char* Reason = "Nullpointer was passed as Class to SpawnEquipItem";
+
+						if (Settings::AC_KickOnViolation)
+						{
+							auto re = FunctionsSpecial::KickPlayer(world, CallingPawn, Reason);
+							Cheat::Message(re);
+						}
+						else
+							Cheat::Message(Reason);
+
+						return;
+					}
 				}
 			}
 		}
-
 		
 	}
 
 	
 	if (execF == FunctionHooks[APlayerController_ServerChangeName]) {
-		auto CallingController = (SDK::APlayerController*)Obj;
-		auto paramsServerChangeName = (SDK::Params::APlayerController_ServerChangeName_Params*)Parms;
+		if (Settings::AntiCheat && Settings::AC_NameChanger)
+		{
+			auto CallingController = (SDK::APlayerController*)Obj;
+			auto paramsServerChangeName = (SDK::Params::APlayerController_ServerChangeName_Params*)Parms;
 
-		std::wstring NewName = paramsServerChangeName->S.ToWString();
+			std::wstring NewName = paramsServerChangeName->S.ToWString();
 
-		auto world = Cheat::Engine->GameViewport->World;
-		bool IsLocalHost = false;
+			auto world = Cheat::Engine->GameViewport->World;
+			bool IsLocalHost = false;
 
-		if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
-			IsLocalHost = (CallingController == LocalPlayer->PlayerController);
-		}
+			if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
+				IsLocalHost = (CallingController == LocalPlayer->PlayerController);
+			}
 
-		if (!IsLocalHost) {
-			for (size_t i = 0; i < PlayerNameChanges.size(); i++)
-			{
-				if (PlayerNameChanges[i].first == CallingController) {
+			if (!IsLocalHost) {
+				for (size_t i = 0; i < PlayerNameChanges.size(); i++)
+				{
+					if (PlayerNameChanges[i].first == CallingController) {
 
-					if (PlayerNameChanges[i].second.size() > 1) {
-						Cheat::MessageW(std::format(L"Player {} tried to Change Name too soon again. Maybe Player is using a Name Changer", PlayerStuff::Player::SanitizeWString(CallingController->PlayerState->PlayerNamePrivate.ToWString())));
-						return;
-					}
-					else
-					{
+						if (PlayerNameChanges[i].second.size() > Settings::AC_NameChangerAllowedChanges) {
+							std::string reason = "Player tried to Change Name too soon again.";
 
-						PlayerNameChanges[i].second.push_back(NewName);
-						break;
+							if (Settings::AC_KickOnViolation)
+							{
+								auto re = FunctionsSpecial::KickPlayer(world, CallingController->Character, reason);
+								Cheat::Message(re);
+							}
+							else
+							    Cheat::Message(reason);
+
+							return;
+						}
+						else
+						{
+
+							PlayerNameChanges[i].second.push_back(NewName);
+							break;
+						}
 					}
 				}
 			}
@@ -379,25 +418,42 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 	}
 
 	if (execF == FunctionHooks[AMP_PlayerController_C_ReceiveEndPlay]) {
-		auto CallingController = (SDK::AMP_PlayerController_C*)Obj;
-
-		for (size_t i = 0; i < PlayerNameChanges.size(); i++)
+		if (Settings::AntiCheat && Settings::AC_NameChanger)
 		{
-			if (PlayerNameChanges[i].first == CallingController) {
-				PlayerNameChanges.erase(PlayerNameChanges.begin() + i);
-				break;
+			auto CallingController = (SDK::AMP_PlayerController_C*)Obj;
+
+			for (auto It = PlayerNameChanges.begin(); It != PlayerNameChanges.end();)
+			{
+				auto ItVal = *It;
+
+				if (ItVal.first == CallingController) {
+					It = PlayerNameChanges.erase(It);
+				}
+				else
+				{
+					It++;
+				}
 			}
 		}
 	}
 
 	if (execF == FunctionHooks[Lobby_PlayerController_C_ReceiveEndPlay]) {
-		auto CallingController = (SDK::ALobby_PlayerController_C*)Obj;
-
-		for (size_t i = 0; i < PlayerNameChanges.size(); i++)
+		
+		if (Settings::AntiCheat && Settings::AC_NameChanger)
 		{
-			if (PlayerNameChanges[i].first == CallingController) {
-				PlayerNameChanges.erase(PlayerNameChanges.begin() + i);
-				break;
+			auto CallingController = (SDK::ALobby_PlayerController_C*)Obj;
+
+			for (auto It = PlayerNameChanges.begin(); It != PlayerNameChanges.end();)
+			{
+				auto ItVal = *It;
+
+				if (ItVal.first == CallingController) {
+					It = PlayerNameChanges.erase(It);
+				}
+				else
+				{
+					It++;
+				}
 			}
 		}
 	}
@@ -470,7 +526,8 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 			}
 		}
 
-		static SDK::FVector2D WindowSize = { 500.0f, 555.0f };
+		const SDK::FVector2D DefaultValue = { 500.0f, 650.0f };
+		static SDK::FVector2D WindowSize = DefaultValue;
 
 		if (ShowHelp || Settings::NewVersion_) {
 			static SDK::FVector2D WindowPos = { 500.0f, 475.0f };
@@ -492,8 +549,8 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				if (CWINGui::Window("?", &WindowPos, WindowSize, Settings::NewVersion_)) {
 					CWINGui::Text(std::format(L"New Version {}!!!", Settings::CheatVersion).c_str());
 
-					CWINGui::Text(L"* Fixed Memory Leak Bug!");
-					CWINGui::Text(L"* Fixed Anti Cheat (Is off now by Default)!");
+					CWINGui::Text(L"* Fixed Memory Leak Bug");
+					CWINGui::Text(L"* Fixed Anti Cheat (plus its off now by Default)");
 
 					CWINGui::Text(L""), CWINGui::SameLine();
 
@@ -515,32 +572,34 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 		}
 
-		const SDK::FVector2D DefaultValue = { 500.0f, 620.0f };
 
 		if (CWINGui::Window("Escape The Backrooms Internal", &Settings::WindowPos, WindowSize, Settings::Open, GifBackground))
 		{
-			static int tab = 1;
-			if (CWINGui::ButtonTab(L"Game Shit", SDK::FVector2D{ 110, 35 }, tab == 0)) { tab = 0; CWINGui::ChangeWindowSize(WindowSize, { 500.0f, 640.0f }); }
+			static int tab = 0;
+			if (CWINGui::ButtonTab(L"Game Shit", SDK::FVector2D{ 110, 35 }, tab == 0)) { tab = 0; CWINGui::ChangeWindowSize(WindowSize, { 500.0f, std::max<float>(DefaultValue.Y, 640.0f) }); }
 			if (CWINGui::ButtonTab(L"World Visuals", SDK::FVector2D{ 110, 35 }, tab == 1)) { tab = 1; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 			if (CWINGui::ButtonTab(L"Miscellaneous", SDK::FVector2D{ 110, 35 }, tab == 2)) { tab = 2; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 			if (CWINGui::ButtonTab(L"Item Spawner", SDK::FVector2D{ 110, 35 }, tab == 3)) { tab = 3; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 			if (CWINGui::ButtonTab(L"Level Miscs", SDK::FVector2D{ 110, 35 }, tab == 4)) { tab = 4; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 			if (CWINGui::ButtonTab(L"Host Info", SDK::FVector2D{ 110, 35 }, tab == 5)) { tab = 5; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 #ifdef Gatekeep
-			if (CWINGui::ButtonTab(L"Chat Spoofer", SDK::FVector2D{ 110, 35 }, tab == 6)) { tab = 6; CWINGui::ChangeWindowSize(WindowSize, { 540.0f, 625.0f }); }
+			if (CWINGui::ButtonTab(L"Chat Spoofer", SDK::FVector2D{ 110, 35 }, tab == 6)) { tab = 6; CWINGui::ChangeWindowSize(WindowSize, { 540.0f, std::max<float>(DefaultValue.Y, 625.0f) }); }
 #endif
-			if (CWINGui::ButtonTab(L"Level Loader", SDK::FVector2D{ 110, 35 }, tab == 7)) { tab = 7; CWINGui::ChangeWindowSize(WindowSize, { 740.0f, 575.0f }); }
+			if (CWINGui::ButtonTab(L"Level Loader", SDK::FVector2D{ 110, 35 }, tab == 7)) { tab = 7; CWINGui::ChangeWindowSize(WindowSize, { 740.0f, std::max<float>(DefaultValue.Y, 575.0f) }); }
 
 			if (CWINGui::ButtonTab(L"Players", SDK::FVector2D{ 110, 35 }, tab == 8)) { tab = 8; CWINGui::ChangeWindowSize(WindowSize, DefaultValue);}
 			if (CWINGui::ButtonTab(L"Hosting Options", SDK::FVector2D{ 110, 35 }, tab == 10)) { tab = 10; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+
+			if (Settings::Spawner_ && CWINGui::ButtonTab(L"Spawner Options", SDK::FVector2D{ 110, 35 }, tab == 11)) { tab = 11; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
+
 			if (CWINGui::ButtonTab(L"Config", SDK::FVector2D{ 110, 35 }, tab == 12)) { tab = 12; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
-			if (Settings::Spawner_ && CWINGui::ButtonTab(L"Spawner Options", SDK::FVector2D{ 110, 35 }, tab == 11)) { tab = 11; CWINGui::ChangeWindowSize(WindowSize, DefaultValue);}
+			if (CWINGui::ButtonTab(L"Anti Cheat", SDK::FVector2D{ 110, 35 }, tab == 13)) { tab = 13; CWINGui::ChangeWindowSize(WindowSize, DefaultValue); }
 
 			CWINGui::NextColumn(140.0f);
 			CWINGui::Text(L"");
 			switch (tab)
 			{
-			case 0:
+			case 0: //General Game Options 
 				CWINGui::Checkbox(L"Peace Mode (Removes any Entity)", &Settings::PeacefullMode);
 				CWINGui::Checkbox(L"No Cameras", &Settings::NoCams);
 				CWINGui::Checkbox(L"NoClip (Client Sided)", &Settings::Noclip);
@@ -595,7 +654,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				//	Settings::OwnSelf = true;
 				//}
 				break;
-			case 1:
+			case 1: //Visual Options
 				//CWINGui::Checkbox(L"Main Switch", &Settings::Esp);
 				CWINGui::Checkbox(L"Spectator List", &Settings::SpectatorList);
 				CWINGui::Checkbox(L"Enemy Esp", &Settings::EnemyEsp);
@@ -611,7 +670,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				CWINGui::Checkbox(L"Enviroment RGB", &Settings::EnviromentRGB);
 				break;
 
-			case 2:
+			case 2: //Misc Options
 				CWINGui::Checkbox(L"Unlock Playercounter (100 Players)", RGBLinear, &Settings::UnlockPlayers);
 				CWINGui::Checkbox(L"Freecam (Activate with J, Teleport with F1)", SDK::FLinearColor{ 0.0f, 1.0f, 0.0f, 1.0f }, &Settings::Freecam);
 				CWINGui::Checkbox(L"Spawner (Lets you Spawn stuff!)", SDK::FLinearColor{ 0.92f, 0.22f, 0.91f, 1.0f }, &Settings::Spawner_);
@@ -677,7 +736,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				}
 
 				break;
-			case 3:
+			case 3: // Server Sided Item Spawner (Spawns on Ground)
 				CWINGui::Text(L"Item Spawner:");
 				/*CWINGui::Checkbox(L"Silent Spawner", &Settings::SilentItemSpawner);*/
 				if (CWINGui::Button(L"Give Diving Helmet", SDK::FVector2D{ 125, 35 })) {
@@ -762,13 +821,13 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				break;
 
 
-			case 4:
+			case 4: //Level Misc stuff. I havent really worked on this yet
 				CWINGui::Text(stringToWideString(Backend::LevelName).c_str());
 				/*CWINGui::Text(L"Coming soon, since this shit takes Time!");*/
 				Backend::RunLevelBackend();
 				break;
 
-			case 5:
+			case 5: //Current Host Information
 				CWINGui::Text(stringToWideString(UseSteamID ? "Host SteamID: " +  Backend::HostSteamID_Clean : "No Host Detected!").c_str());
 
 				
@@ -784,7 +843,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				break;
 
 
-			case 6:
+			case 6: //Name Spoofer for Chat
 
 				CWINGui::Text(std::wstring(L"Spoofed as Player: " + (Settings::PlayerPicked != -1 ? PlayerStuff::PlayerList[Settings::PlayerPicked].name : std::wstring(L"None")) ).c_str());
 
@@ -862,7 +921,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 				break;
 
-			case 7:
+			case 7: //Level Loader
 				CWINGui::Text(L"Level Loader 1.0");
 				if (CWINGui::Button(L"Main Menu", SDK::FVector2D{ 110, 35 })) {
 					Settings::LevelToLoad = L"MainMenuMap";
@@ -1050,7 +1109,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				}
 				break;
 
-			case 8:
+			case 8: // Player List to Pick for Trolling stuff or General stuff like Teleport to them and so so
 				
 				for (size_t i = 0; i < PlayerStuff::PlayerList.size(); i++)
 				{
@@ -1074,7 +1133,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 				break;
 
-			case 9:
+			case 9: // Options to Mess with Current Picked Player
 				if (Settings::PlayerPicked_S != -1)
 				{
 					auto player = PlayerStuff::PlayerList[Settings::PlayerPicked_S];
@@ -1151,13 +1210,13 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				break;
 
 
-			case 10:
+			case 10: // Hosting Stuff
 				CWINGui::Checkbox(L"Players Noclip through Players", &Settings::Host_CollisionPlayers);
 				CWINGui::Checkbox(L"Fun Mode", &Settings::Host_FunMode);
 
 				break;
 
-			case 11:
+			case 11: // Server Sided Spawner
 				using namespace Settings;
 
 				if (CWINGui::Button(L"Spawn Boat", SDK::FVector2D{ 125, 35 })) {
@@ -1183,8 +1242,16 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				break;
 
 
-			case 12:
+			case 12: // Config System
 			    {
+
+				if (configsys->hasConfigFailed()) //In case of Completly breaking Config System, just hide this Tab
+				{
+					tab = 0;
+					Cheat::Message("Can´t Use Config System, something went really really wrong");
+				}
+					
+
 				static std::wstring CurrentConfigFileName = L"";
 
 				if (CurrentConfigFileName == L"") {
@@ -1219,7 +1286,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 								if (!configsys->ActivateConfig(Out__, configsys->GetSettingsPath())) {
 									Cheat::Message("Failed to Change Config File!, Changing to Default");
 									if (!configsys->ActivateConfig("config1", configsys->GetSettingsPath()))
-										Cheat::Message("Failed to Change to Default Config File. Fuck you tbh");
+										Cheat::Message("Failed to Change to Default Config File. ");
 								}
 
 								Settings::AddFieldsToConfig(configsys);
@@ -1240,6 +1307,13 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				}
 
 			    }
+				break;
+
+			case 13://Anti Cheat Options
+				CWINGui::Checkbox(L"Anti Cheat", &Settings::AntiCheat);
+				CWINGui::Checkbox(L"Kick on Violations", &Settings::AC_KickOnViolation);
+				CWINGui::Checkbox(L"Check Bad Item (Item Spawner)", &Settings::AC_InvalidItemSpawner);
+				CWINGui::Checkbox(L"Check Name Changer", &Settings::AC_NameChanger);
 				break;
 
 			default:
@@ -1266,6 +1340,8 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 
 	return origin_renderer(object, Canvas);
 }
+
+HMODULE module_ = NULL;
 
 void ExitCheat() {
 	SDK::UWorld* World = SDK::UWorld::GetWorld();
@@ -1304,7 +1380,6 @@ void ExitCheat() {
 	}
 
 	std::cout << "[*] Unhooked Renderfunc\n[*] Freeing Console!\n";
-	ConsoleExit();
 
 	configsys->ActivateConfig("menu_data", configsys->GetSettingsPath());
 
@@ -1316,9 +1391,25 @@ void ExitCheat() {
 
 	delete GifBackground;
 	delete configsys;
+
+	Settings::FreeUpCheat = true;
+
+	ConsoleExit();
 }
 
-void MainThread() {
+void RunThread(HMODULE module_) //doesnt work :(
+{
+	while (!Settings::FreeUpCheat)
+	{
+		Sleep(1000);
+	}
+
+	Sleep(500);
+
+	FreeLibrary(module_);
+}
+
+void MainThread(HMODULE hModule) {
 
 	if (!Cheat::Ini()) {
 		Cheat::Message("Cheat needs to be Updated. Im up to Updating probly already", FOREGROUND_GREEN);
@@ -1423,8 +1514,10 @@ void MainThread() {
 		GifBackground = new CWINGui::GifData(TexturesCopy, 50);
 	}
 
+
 	return;
 }
+
 
 BOOL APIENTRY DllMain( HMODULE hModule,
                        DWORD  ul_reason_for_call,
@@ -1438,7 +1531,11 @@ BOOL APIENTRY DllMain( HMODULE hModule,
 		freopen_s(&ConsoleFile, "CONOUT$", "w", stdout);
 		freopen_s(&ConsoleFile, "CONOUT$", "w", stderr);
 		freopen_s(&ConsoleFile, "CONIN$", "r", stdin);
-		MainThread();
+		MainThread(hModule);
+		break;
+
+	case DLL_PROCESS_DETACH:
+		ConsoleExit();
 		break;
 
 	default:
