@@ -300,6 +300,7 @@ namespace Settings {
 
 	ULONGLONG TickCountCheatTime = 0;
 
+	bool FreeUpCheat = false;
 	bool NewVersion_ = false;
 	bool Open = true;
 	bool Esp = false;
@@ -345,8 +346,16 @@ namespace Settings {
 
 	//Anti Cheat
 	bool AntiCheat = false;
+
+	//Anti Cheat Settings
+	bool AC_KickOnViolation = false;
+
+	//Anti Cheat Options
 	bool AC_InvalidItemSpawner = false;
 	bool AC_NameChanger = false;
+
+	//Anti Cheat Options Settings
+	char AC_NameChangerAllowedChanges = 1;
 
 
 	//Misc
@@ -469,6 +478,11 @@ namespace Settings {
 		configsys->AddField(&BoatSpeed, 29);
 		configsys->AddField(&PlayerFlySpeedY, 30);
 		//configsys->AddField(&CurrentName_Saved, 31);
+		configsys->AddField(&AntiCheat, 32);
+		configsys->AddField(&AC_KickOnViolation, 33);
+		configsys->AddField(&AC_InvalidItemSpawner, 34);
+		configsys->AddField(&AC_NameChanger, 35);
+		configsys->AddField(&AC_NameChangerAllowedChanges, 36);
 	}
 }
 
