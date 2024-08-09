@@ -3,7 +3,7 @@
 #include <unordered_map>
 #include <format>
 #include <functional>
-#include "Config.h"
+#include "Config/Config.h"
 
 namespace Backend {
 	using EventHandler = std::function<void()>;
@@ -393,7 +393,7 @@ namespace Settings {
 	bool BringAllItems = false; // Noch nichts
 	bool RevivePlayer = false;// Noch nichts
 	bool NoCams = false;
-	bool HideWalls = false;
+	bool HideDoors = false;
 	bool PlayerFly = false;
 	bool PeacefullMode = false;
 	bool Spawner_ = false;

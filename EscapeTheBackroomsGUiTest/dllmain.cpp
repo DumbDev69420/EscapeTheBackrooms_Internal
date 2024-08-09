@@ -6,7 +6,7 @@
 #include "Out/IncludeFile.h"
 
 #include "Cheat.h"
-#include "Config.h"
+#include "Config/Config.h"
 
 FILE* ConsoleFile = nullptr;
 
@@ -381,13 +381,13 @@ void ProcessEventHook(SDK::UObject* Obj, SDK::UFunction* Function, void* Parms) 
 			std::wstring NewName = paramsServerChangeName->S.ToWString();
 
 			auto world = Cheat::Engine->GameViewport->World;
-			bool IsLocalHost = false;
+			bool IsLocalPlayer = false;
 
 			if (auto LocalPlayer = world->OwningGameInstance->LocalPlayers[0]; LocalPlayer && LocalPlayer->PlayerController) {
-				IsLocalHost = (CallingController == LocalPlayer->PlayerController);
+				IsLocalPlayer = (CallingController == LocalPlayer->PlayerController);
 			}
 
-			if (!IsLocalHost) {
+			if (!IsLocalPlayer) {
 				for (size_t i = 0; i < PlayerNameChanges.size(); i++)
 				{
 					if (PlayerNameChanges[i].first == CallingController) {
@@ -610,7 +610,7 @@ void MainRender(SDK::UObject* object, SDK::UCanvas* Canvas) {
 				CWINGui::SliderFloat(L"Flyspeed (Boat & Player)", &Settings::PlayerFlySpeedY, 0.01f, 1000.0f);
 				if (CWINGui::Button(L"Hide Doors", SDK::FVector2D{ 110, 35 })) {
 					Settings::ActorEvent = true;
-					Settings::HideWalls = true;
+					Settings::HideDoors = true;
 				}
 				//if (CWINGui::Button(L"Force Admin", SDK::FVector2D{ 110, 35 })) {
 				//	Settings::ForceAdmin = true;
@@ -1365,7 +1365,7 @@ void ExitCheat() {
 	MH_Uninitialize();
 
 
-	//Not Working! Fix else keep massive memory leak!
+	//Not Working! Fix else keep massive memory leak! (like 1.2kb which is okay i think)
 	for (SDK::UTexture2D* texture : GifBackground->TextureArray)
 	{
 		//Mark Textures as Garbage then set to nullptr
