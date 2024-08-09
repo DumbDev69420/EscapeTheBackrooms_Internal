@@ -200,11 +200,11 @@
   <ItemGroup>
     <ClInclude Include="Cheat.h" />
     <ClInclude Include="CheatDefines.h" />
-    <ClInclude Include="Config.h" />
-    <ClInclude Include="framework.h" />
+    <ClInclude Include="Config\Config.h" />
     <ClInclude Include="GUI\ZeroGUI.h" />
     <ClInclude Include="GUI\ZeroInput.h" />
     <ClInclude Include="HostModifiers.h" />
+    <ClInclude Include="Localization\Localization.h" />
     <ClInclude Include="Out\File0.h" />
     <ClInclude Include="Out\File1.h" />
     <ClInclude Include="Out\File10.h" />
@@ -2235,8 +2235,9 @@
     <ClInclude Include="vcpkg_Out\include\MinHook.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Config.cpp" />
+    <ClCompile Include="Config\Config.cpp" />
     <ClCompile Include="dllmain.cpp" />
+    <ClCompile Include="Localization\Localization.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

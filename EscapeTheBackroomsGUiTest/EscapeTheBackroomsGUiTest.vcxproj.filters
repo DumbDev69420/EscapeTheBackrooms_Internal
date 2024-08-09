@@ -40,11 +40,14 @@
     <Filter Include="Headerdateien\Minhook">
       <UniqueIdentifier>{d8f0623a-90da-43b3-a824-7dc2affaf33f}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Headerdateien\Localization">
+      <UniqueIdentifier>{aaed2e52-1174-43cd-b5b9-de4015e11238}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Quelldateien\Localization">
+      <UniqueIdentifier>{06531863-a123-43de-8e21-648565358625}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="framework.h">
-      <Filter>Headerdateien</Filter>
-    </ClInclude>
     <ClInclude Include="pch.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -6132,9 +6135,6 @@
     <ClInclude Include="Out\File118.h">
       <Filter>Headerdateien\Data\ContainingImageData</Filter>
     </ClInclude>
-    <ClInclude Include="Config.h">
-      <Filter>Headerdateien\Config</Filter>
-    </ClInclude>
     <ClInclude Include="CheatDefines.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
@@ -6146,6 +6146,12 @@
     </ClInclude>
     <ClInclude Include="GUI\ZeroInput.h">
       <Filter>Headerdateien\ZeroGUI</Filter>
+    </ClInclude>
+    <ClInclude Include="Localization\Localization.h">
+      <Filter>Headerdateien\Localization</Filter>
+    </ClInclude>
+    <ClInclude Include="Config\Config.h">
+      <Filter>Headerdateien\Config</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -6371,8 +6377,11 @@
     <ClCompile Include="SDK\SDK\Paper2D_functions.cpp">
       <Filter>Quelldateien\SDK</Filter>
     </ClCompile>
-    <ClCompile Include="Config.cpp">
+    <ClCompile Include="Config\Config.cpp">
       <Filter>Quelldateien\Config</Filter>
+    </ClCompile>
+    <ClCompile Include="Localization\Localization.cpp">
+      <Filter>Quelldateien\Localization</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
