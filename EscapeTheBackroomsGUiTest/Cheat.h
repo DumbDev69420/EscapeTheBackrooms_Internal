@@ -2786,7 +2786,6 @@ namespace Cheat {
 				SDK::UClass* StaticABPCharacter = SDK::ABPCharacter_Demo_C::StaticClass();
 
 
-
 				static bool HideActors = false;
 
 				if (Settings::PeacefullMode) { HideActors = true; StaticSkinMf = SDK::ABP_SkinStealer_C::StaticClass(); StaticBacteriaMf = SDK::ABacteria_BP_C::StaticClass(); StaticHowlerMf = SDK::AHowler_BP_C::StaticClass(); }
@@ -3019,24 +3018,22 @@ namespace Cheat {
 
 
 			if (Settings::ActorEsp || Settings::ActorEvent || CamsOff) {
-				auto EnemyArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::AActor::StaticClass());
+				auto ActorArray = GetAllActorsOfClass(Engine->GameViewport->World, SDK::AActor::StaticClass());
+				auto ActorArray_Component = FindInstances(SDK::UActorComponent::StaticClass());
 
-				if (EnemyArray.size() > 0) {
+				if (ActorArray.size() > 0) {
 
 					static bool WallsHidden = false;
 
-					for (size_t i = 0; i < EnemyArray.size(); i++)
+					for (size_t i = 0; i < ActorArray.size(); i++)
 					{
-						if (!UsefullFuncs::ShouldUsePtr(EnemyArray[i]))continue;
-
-						auto CurrentEnemy = EnemyArray[i];
-
+						auto CurrentActor = ActorArray[i];
 
 
 						if (CamsOff) {
-							if (strToLower(CurrentEnemy->Name.ToString()).find("securitycam") != std::string::npos) {
-								CurrentEnemy->SetActorHiddenInGame(true);
-								CurrentEnemy->SetActorEnableCollision(false);
+							if (strToLower(CurrentActor->Name.ToString()).find("securitycam") != std::string::npos) {
+								CurrentActor->SetActorHiddenInGame(true);
+								CurrentActor->SetActorEnableCollision(false);
 							}
 
 							if (!Settings::ActorEsp)continue;
@@ -3045,20 +3042,20 @@ namespace Cheat {
 
 
 						if (Settings::ActorEvent) {
-							if (Settings::HideWalls) {
+							if (Settings::HideDoors) {
 
 								if (WallsHidden) {
 
-									if (strToLower(CurrentEnemy->Name.ToString()).find("door") != std::string::npos) {
-										CurrentEnemy->SetActorHiddenInGame(false);
-										CurrentEnemy->SetActorEnableCollision(true);
+									if (strToLower(CurrentActor->Name.ToString()).find("door") != std::string::npos) {
+										CurrentActor->SetActorHiddenInGame(false);
+										CurrentActor->SetActorEnableCollision(true);
 									}
 								}
 								else
 								{
-									if (strToLower(CurrentEnemy->Name.ToString()).find("door") != std::string::npos) {
-										CurrentEnemy->SetActorHiddenInGame(true);
-										CurrentEnemy->SetActorEnableCollision(false);
+									if (strToLower(CurrentActor->Name.ToString()).find("door") != std::string::npos) {
+										CurrentActor->SetActorHiddenInGame(true);
+										CurrentActor->SetActorEnableCollision(false);
 									}
 								}
 
@@ -3073,18 +3070,18 @@ namespace Cheat {
 
 
 
-						if (CurrentEnemy->Name.ToString().find(Settings::ActorFilter) == std::string::npos)continue;
+						if (CurrentActor->Name.ToString().find(Settings::ActorFilter) == std::string::npos)continue;
 
 
 						SDK::FVector2D ScreenPos;
 
-						auto Location = CurrentEnemy->K2_GetActorLocation();
+						auto Location = CurrentActor->K2_GetActorLocation();
 						if (!GPStatics->ProjectWorldToScreen(PlayerController, Location, &ScreenPos, true))continue;
 
 						auto Color = UsefullFuncs::RGBATOFLinear(255, 0, 0, 255);
 
 						UsefullFuncs::DrawCircle(Canvas, ScreenPos, 10.0f, 12, Color);
-						std::wstring TextMsg = UsefullFuncs::stringToWideString(CurrentEnemy->Class->GetName());
+						std::wstring TextMsg = UsefullFuncs::stringToWideString(CurrentActor->Class->GetName());
 						ScreenPos.X -= TextMsg.size() * 5.0f / 2;
 						ScreenPos.Y -= 30.0f;
 						DrawTextRGBWithFString(Canvas, SDK::FString(TextMsg.c_str()), ScreenPos, Color, false, 1.1f);
@@ -3096,8 +3093,12 @@ namespace Cheat {
 
 					if (Settings::ActorEvent) {
 						Settings::ActorEvent = false;
-						if (Settings::HideWalls)
+						if (Settings::HideDoors)
+						{
+							Settings::HideDoors = false;
 							WallsHidden = !WallsHidden;
+						}
+							
 					}
 				}
 			}
