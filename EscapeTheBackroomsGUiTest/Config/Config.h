@@ -7,19 +7,30 @@
 #include <fstream>
 #include <functional>
 
+template<typename T, typename T1> //Check if Type is the Type you wanna avoid
+constexpr bool isWrongType()
+{
+	return T == T1;
+}
+
 struct ConfigSystemInternalSettings {
 	//Adjust Values how ever is needed!
 	int MaxTypeSize = 25; //The Max Byte Size of an Type that can be added and used
 	int MaxFieldCount = 70; //The Max amount of Fields that get Loaded
-	std::string ConfigPath = R"(C:/EscapeInternal)"; //The Directory that stores the Safefiles and reads them from
+	std::string ConfigPath = R"(C:/Bloodhunt)"; //The Directory that stores the Safefiles and reads them from
 	std::string ExtensionConfig = "escp"; //the extension of the file we wanna make. (if you wanna ignore some values or some
 };
+
+// Test not finished functions early, (Only Activate if you know what you are doing)
+#define Test false 
 
 //for debugging Purposes obviously
 #define Debug false
 
 //if your scared of fucking something up make this to true
 #define IdkMode false
+
+#define dataLimit_String 50
 
 inline std::vector < std::pair<void*, int> > FieldRefs;
 
@@ -141,6 +152,7 @@ public:
 	//Adding Fields with the Same ID will result in weird behaviour
 	template <typename T>
 	void AddField(T* type, int ID) {
+		static_assert(isWrongType<T, std::string>(), "Config Error!, Tried adding String to Config through wrong Function, please use the overloaded function!");
 #if Babymode == true
 		for (auto& RefField : FieldReferences)
 		{
@@ -156,7 +168,7 @@ public:
 
 		FieldOwning in(sizeof(T), type, ID);
 
-		for (auto& field : Fields) {
+		for (auto& field : Fields) { //Look if config is looking for this type
 			if (field.ID == ID) {
 				in.OwningConfigField = &field;
 				break;
@@ -165,4 +177,46 @@ public:
 
 		FieldReferences.push_back(in);
 	}
+
+#if Test == true
+
+	//assign the max Length of the String it can hold and should hold, the rest wont be written
+	void AddField(std::string* type, int ID, unsigned int stringLen) {
+#if Babymode == true
+		for (auto& RefField : FieldReferences)
+		{
+			if (RefField.ID == ID)
+			{
+#if Debug == true
+				std::cout << "AddField failed! An Field with the Same ID was already Added. ID: " << ID << "\n";
+#endif
+				return;
+			}
+		}
+#endif
+
+		FieldOwning in(stringLen * sizeof(char), type, ID);
+
+		for (auto& field : Fields) { //Look if config is looking for string
+			if (field.ID == ID) {
+
+				if (field.FieldSize > (dataLimit_String * sizeof(char))) //Check if string follows max dataLimit, if not return
+				{
+					return;
+				}
+
+				//reserve space for string, to store data from config
+				type->reserve(field.FieldSize);
+
+				in.TypeSize = (field.FieldSize * sizeof(char)); //normally dont trust the config field size, but here its kinda needed since we dont know the size
+
+				in.OwningConfigField = &field;
+				break;
+			}
+		}
+
+		FieldReferences.push_back(in);
+	}
+
+#endif // Test
 };
