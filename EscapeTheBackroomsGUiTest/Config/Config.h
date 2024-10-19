@@ -17,7 +17,7 @@ struct ConfigSystemInternalSettings {
 	//Adjust Values how ever is needed!
 	int MaxTypeSize = 25; //The Max Byte Size of an Type that can be added and used
 	int MaxFieldCount = 70; //The Max amount of Fields that get Loaded
-	std::string ConfigPath = R"(C:/Bloodhunt)"; //The Directory that stores the Safefiles and reads them from
+	std::string ConfigPath = R"(C:/EscapeInternal)"; //The Directory that stores the Safefiles and reads them from
 	std::string ExtensionConfig = "escp"; //the extension of the file we wanna make. (if you wanna ignore some values or some
 };
 
